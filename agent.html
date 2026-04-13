@@ -1,6 +1,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,6 +82,9 @@
     <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis">
       <span class="sidebar-icon">🧮</span> Analysis Tool
     </button>
+    <button class="sidebar-link" onclick="showPage('settings')" id="nav-settings">
+      <span class="sidebar-icon">⚙️</span> Settings
+    </button>
   </div>
 </div>
 
@@ -121,7 +125,7 @@
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-gold" onclick="showPage('place-bet')">🎲 Place Bet</button>
       <button class="btn btn-blue" onclick="showPage('my-bets')">📋 My Bets</button>
-      <button class="btn btn-green" onclick="showPage('results')">📅 Results</button>
+      <button class="btn btn-gray" onclick="showPage('settings')">⚙️ Change Password</button>
     </div>
   </div>
 </div>
@@ -261,6 +265,24 @@
   </div>
 </div>
 
+<div id="page-settings" style="display:none;">
+  <div class="section-header">
+    <h2 class="section-title">⚙️ Agent Settings</h2>
+  </div>
+  <div class="card" style="max-width: 400px;">
+    <div class="card-title">Change Password</div>
+    <div class="form-group">
+      <label class="form-label">New Password</label>
+      <input type="password" id="setting-new-password" class="form-input" placeholder="Enter new password"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm New Password</label>
+      <input type="password" id="setting-confirm-password" class="form-input" placeholder="Confirm new password"/>
+    </div>
+    <button class="btn btn-gold btn-full" onclick="changeAgentPassword()" id="change-pass-btn" style="margin-top: 10px;">Update Password</button>
+  </div>
+</div>
+
 </div></div></div><div id="toast-container" class="toast-container"></div>
 
 <script>
@@ -296,44 +318,77 @@ function formatINR(a){return '₹'+Number(a).toLocaleString('en-IN');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 
 // =====================================================
+// STATE
+// =====================================================
+let currentAgent = null;
+let settings = {commissionRate: 10};
+let betCart = [];
+let myBets = [];
+let allResults = [];
+let todayResultData = null;
+let wasAfter6 = false;
+
+// =====================================================
+// 6:00 PM HIDE LOGIC FOR AGENT
+// =====================================================
+function updateUIForTime() {
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  const isAfter6 = now.getHours() >= 18; // 18 is 6:00 PM
+
+  // Dashboard Hero Section
+  if (todayResultData && isAfter6) {
+    document.getElementById('home-num').textContent = String(todayResultData.number).padStart(2, '0');
+    document.getElementById('home-word').textContent = getWord(todayResultData.number);
+    document.getElementById('home-time').textContent = 'Opened at: ' + (todayResultData.time || '6:00 PM');
+    document.getElementById('home-time').style.color = '#68d391';
+  } else {
+    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
+    document.getElementById('home-word').textContent = 'Result not announced yet';
+    document.getElementById('home-time').textContent = 'Open Time: 6:00 PM';
+    document.getElementById('home-time').style.color = '#fff';
+  }
+
+  // Results History Table Filter (Hide today's result if before 6 PM)
+  const today = getTodayDateStr();
+  const visibleResults = allResults.filter(r => {
+    if (r.date === today && !isAfter6) return false;
+    return true;
+  });
+  
+  const tbody = document.getElementById('results-body');
+  if(!visibleResults.length){
+    document.getElementById('results-table').style.display='none';
+    document.getElementById('results-empty').style.display='flex';
+  } else {
+    document.getElementById('results-table').style.display='table';
+    document.getElementById('results-empty').style.display='none';
+    tbody.innerHTML = visibleResults.map(r=>`
+      <tr>
+        <td>${r.date||'--'}</td>
+        <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
+        <td>${r.numberWord||getWord(r.number)}</td>
+        <td>${r.time||'--'}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+// =====================================================
 // LIVE CLOCK & TIMER
 // =====================================================
 function initLiveClock() {
   setInterval(() => {
-    const now = new Date();
-    const timeOpts = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-    const dateOpts = { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', weekday: 'long' };
-    
-    document.getElementById('live-time').textContent = now.toLocaleTimeString('en-IN', timeOpts);
-    document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', dateOpts);
+    const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+    document.getElementById('live-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
+    document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', weekday: 'long'});
 
-    const target = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    target.setHours(18, 0, 0, 0); 
-    
-    let diff = target - now;
-    const homeTimeEl = document.getElementById('home-time');
-    
-    if (diff > 0) {
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      homeTimeEl.textContent = `Result opens in: ${h}h ${m}m ${s}s (6:00 PM)`;
-      homeTimeEl.style.color = "#fff";
-    } else {
-      homeTimeEl.textContent = "Checking for Today's Result...";
-      homeTimeEl.style.color = "#68d391";
+    const isAfter6 = now.getHours() >= 18;
+    if (isAfter6 && !wasAfter6) {
+      wasAfter6 = true;
+      updateUIForTime();
     }
   }, 1000);
 }
-
-// =====================================================
-// STATE
-// =====================================================
-let currentAgent = null;
-let settings = {};
-let betCart = [];
-let myBets = [];
-let allResults = [];
 
 // =====================================================
 // AGENT LOGIN
@@ -385,9 +440,8 @@ function agentLogout(){
 function initAgentApp() {
   initLiveClock();
   loadSettings();
-  loadTodayNumber();
+  loadResultsAndToday();
   loadMyBets();
-  loadResults();
   showPage('home');
 }
 
@@ -403,46 +457,14 @@ function showPage(page) {
 // =====================================================
 // REALTIME DATA LOADERS
 // =====================================================
-function loadTodayNumber() {
-  const today = getTodayDateStr();
-  db.collection('results').where('date','==',today).orderBy('timestamp','desc').limit(1)
-    .onSnapshot(snap=>{
-      if(!snap.empty){
-        const d=snap.docs[0].data();
-        document.getElementById('home-num').textContent=String(d.number).padStart(2,'0');
-        document.getElementById('home-word').textContent=getWord(d.number);
-        document.getElementById('home-time').textContent = 'Opened at: ' + (d.time || '6:00 PM');
-      } else {
-        document.getElementById('home-num').innerHTML='<span class="no-result">--</span>';
-        document.getElementById('home-word').textContent='Result not announced yet';
-      }
-    });
-}
-
-function loadResults() {
+function loadResultsAndToday() {
   db.collection('results').orderBy('timestamp','desc').limit(30)
     .onSnapshot(snap=>{
       allResults = snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderResults();
+      todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
+      document.getElementById('results-loading').style.display='none';
+      updateUIForTime();
     });
-}
-
-function renderResults() {
-  document.getElementById('results-loading').style.display='none';
-  const tbody=document.getElementById('results-body');
-  if(!allResults.length){
-    document.getElementById('results-empty').style.display='flex';
-    return;
-  }
-  document.getElementById('results-table').style.display='table';
-  tbody.innerHTML=allResults.map(r=>`
-    <tr>
-      <td>${r.date||'--'}</td>
-      <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
-      <td>${r.numberWord||getWord(r.number)}</td>
-      <td>${r.time||'--'}</td>
-    </tr>
-  `).join('');
 }
 
 function loadSettings() {
@@ -599,7 +621,7 @@ async function submitAllBets() {
         amount: b.amount,
         commission:b.commission, 
         userAmount:b.userAmount,
-        userWin: b.userWin, // Storing potential win
+        userWin: b.userWin,
         date:today, time, timestamp:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
@@ -620,7 +642,7 @@ async function submitAllBets() {
 function loadMyBets() {
   if(!currentAgent) return;
   const today=getTodayDateStr();
-  db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(100)
+  db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(500)
     .onSnapshot(snap=>{
       myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderMyBets(myBets); // Render initially with all data
@@ -674,6 +696,37 @@ function renderMyBets(dataToRender) {
       <td style="font-size:11px; color:#888;">${b.date}<br/>${b.time}</td>
     </tr>
   `).join('');
+}
+
+// =====================================================
+// AGENT PASSWORD CHANGE
+// =====================================================
+async function changeAgentPassword() {
+  const newPass = document.getElementById('setting-new-password').value.trim();
+  const confirmPass = document.getElementById('setting-confirm-password').value.trim();
+
+  if(!newPass || !confirmPass) { return showToast('Please fill in both fields', 'error'); }
+  if(newPass !== confirmPass) { return showToast('Passwords do not match', 'error'); }
+  if(newPass.length < 4) { return showToast('Password must be at least 4 characters long', 'error'); }
+
+  const btn = document.getElementById('change-pass-btn');
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+
+  try {
+    await db.collection('agents').doc(currentAgent.id).update({
+      password: newPass
+    });
+    currentAgent.password = newPass; 
+    showToast('Password updated successfully!', 'success');
+    document.getElementById('setting-new-password').value = '';
+    document.getElementById('setting-confirm-password').value = '';
+  } catch (error) {
+    showToast('Failed to update password: ' + error.message, 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Update Password';
 }
 
 // =====================================================

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Agent Panel — Number Result System</title>
+<link rel="stylesheet" href="style.css"/>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- ================ LOGIN PAGE ================ -->
+<div id="login-page" class="login-page">
+  <div class="login-box">
+    <div class="login-logo">Number Result System</div>
+    <h2 class="login-title">Agent Login</h2>
+    <p class="login-subtitle">Enter your credentials to access the betting panel</p>
+    <div id="login-error" class="alert alert-error" style="display:none;text-align:left;"></div>
+    <div class="form-group">
+      <label class="form-label">Mobile Number</label>
+      <input type="tel" id="login-mobile" class="form-input" placeholder="9876543210" maxlength="10"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="login-password" class="form-input" placeholder="Enter password"/>
+    </div>
+    <button class="btn btn-gold btn-full btn-lg" onclick="agentLogin()" id="login-btn">LOGIN</button>
+    <p style="margin-top:16px;"><a href="index.html" style="color:var(--text-muted);font-size:12px;">← Back to Home</a></p>
+  </div>
+</div>
+
+<!-- ================ AGENT APP ================ -->
+<div id="agent-app" style="display:none;">
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+    <div class="nav-brand">Agent Panel <span id="nav-agent-name"></span></div>
+  </div>
+  <div class="nav-links">
+    <a href="index.html" class="nav-btn outline">Home</a>
+    <button class="nav-btn danger" onclick="agentLogout()">Logout</button>
+  </div>
+</nav>
+
+<div class="app-layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Main</div>
+    <button class="sidebar-link active" onclick="showPage('home')" id="nav-home">
+      <span class="sidebar-icon">🏠</span> Home
+    </button>
+    <button class="sidebar-link" onclick="showPage('place-bet')" id="nav-place-bet">
+      <span class="sidebar-icon">🎲</span> Place Bet
+    </button>
+    <button class="sidebar-link" onclick="showPage('my-bets')" id="nav-my-bets">
+      <span class="sidebar-icon">📋</span> My Bets
+    </button>
+    <button class="sidebar-link" onclick="showPage('results')" id="nav-results">
+      <span class="sidebar-icon">📅</span> Results
+    </button>
+    <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis">
+      <span class="sidebar-icon">🧮</span> Analysis Tool
+    </button>
+  </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="page-content" id="page-content">
+
+<!-- ============ HOME ============ -->
+<div id="page-home">
+  <div class="section-header">
+    <h2 class="section-title">🏠 Agent Dashboard</h2>
+  </div>
+
+  <!-- Today's Number -->
+  <div class="hero-number card-gold" style="margin-bottom:20px;">
+    <div class="hero-label"><span class="live-dot"></span>TODAY'S OPEN NUMBER</div>
+    <div id="home-num" class="hero-num font-orbitron">--</div>
+    <div id="home-word" class="hero-word">Waiting for result...</div>
+    <div id="home-time" class="hero-time">Open Time: --</div>
+  </div>
+
+  <!-- My Stats -->
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="stat-card">
+      <div class="stat-icon">🎲</div>
+      <div class="stat-value" id="my-bets-count">0</div>
+      <div class="stat-label">My Bets Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💰</div>
+      <div class="stat-value" id="my-amount" style="font-size:18px;">₹0</div>
+      <div class="stat-label">Total Bet Amount</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💸</div>
+      <div class="stat-value" id="my-commission" style="font-size:18px;color:#68d391;">₹0</div>
+      <div class="stat-label">My Commission</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="showPage('place-bet')">🎲 Place Bet</button>
+      <button class="btn btn-blue" onclick="showPage('my-bets')">📋 My Bets</button>
+      <button class="btn btn-green" onclick="showPage('results')">📅 Results</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PLACE BET ============ -->
+<div id="page-place-bet" style="display:none;">
+  <div class="section-header">
+    <h2 class="section-title">🎲 Place Bet</h2>
+  </div>
+
+  <div class="grid-2">
+    <!-- Bet Form -->
+    <div class="card card-gold">
+      <div class="card-title">Add Bet Entry</div>
+      
+      <div id="bet-entries" style="margin-bottom:16px;"></div>
+
+      <div class="card" style="background:var(--bg-secondary);border:1px dashed var(--border);margin-bottom:16px;">
+        <div class="card-title" style="font-size:12px;">New Entry</div>
+        <div style="display:grid;grid-template-columns:80px 1fr 100px auto;gap:8px;align-items:end;">
+          <div>
+            <label class="form-label">Number</label>
+            <input type="number" id="bet-num" class="form-input" min="0" max="99" placeholder="45"/>
+          </div>
+          <div>
+            <label class="form-label">Harup</label>
+            <select id="bet-harup" class="form-select" onchange="updateHarupAmount()">
+              <option value="">Select Harup</option>
+              <option value="1">Harup 1</option>
+              <option value="2">Harup 2</option>
+              <option value="3">Harup 3</option>
+              <option value="4">Harup 4</option>
+              <option value="5">Harup 5</option>
+              <option value="6">Harup 6</option>
+              <option value="7">Harup 7</option>
+              <option value="8">Harup 8</option>
+              <option value="9">Harup 9</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Amount ₹</label>
+            <input type="number" id="bet-amount" class="form-input" min="1" placeholder="100" oninput="calcSingleBet()"/>
+          </div>
+          <div>
+            <button class="btn btn-gold" onclick="addBetEntry()" style="margin-top:20px;">+ Add</button>
+          </div>
+        </div>
+        <div id="single-bet-calc" style="margin-top:10px;display:none;" class="alert alert-info"></div>
+      </div>
+
+      <button class="btn btn-gold btn-full btn-lg" onclick="submitAllBets()" id="submit-bets-btn" disabled>
+        ✅ Submit All Bets
+      </button>
+    </div>
+
+    <!-- Summary Panel -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Bet Summary</div>
+        <div id="bet-cart-empty" class="empty-state" style="padding:30px 10px;">
+          <div class="empty-state-icon">🎲</div>
+          <div class="empty-state-text">No bets added yet</div>
+        </div>
+        <div id="bet-cart-list"></div>
+        <div id="bet-cart-totals" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+          <div class="bet-summary-row"><span>Total Bets</span><span class="amount-gold" id="cart-count">0</span></div>
+          <div class="bet-summary-row"><span>Total Amount</span><span class="amount-gold" id="cart-total">₹0</span></div>
+          <div class="bet-summary-row"><span>Your Commission (10%)</span><span class="amount-green" id="cart-commission">₹0</span></div>
+          <div class="bet-summary-row"><span>Net Amount</span><span class="amount-red" id="cart-net">₹0</span></div>
+        </div>
+      </div>
+
+      <!-- Harup Reference -->
+      <div class="card">
+        <div class="card-title">Harup Amount Reference</div>
+        <div id="harup-ref" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MY BETS ============ -->
+<div id="page-my-bets" style="display:none;">
+  <div class="section-header">
+    <h2 class="section-title">📋 My Bets</h2>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="mybets-loading" class="loading"><div class="spinner"></div>Loading...</div>
+    <div style="overflow-x:auto;">
+      <table class="history-table" id="mybets-table" style="display:none;">
+        <thead><tr><th>Number</th><th>Harup</th><th>Amount</th><th>Commission</th><th>Net</th><th>Date</th><th>Time</th></tr></thead>
+        <tbody id="mybets-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RESULTS ============ -->
+<div id="page-results" style="display:none;">
+  <div class="section-header">
+    <h2 class="section-title">📅 Results History</h2>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
+    <table class="history-table" id="results-table" style="display:none;">
+      <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
+      <tbody id="results-body"></tbody>
+    </table>
+    <div id="results-empty" class="empty-state" style="display:none;padding:40px;">
+      <div class="empty-state-icon">📅</div>
+      <div class="empty-state-text">No results available</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ANALYSIS ============ -->
+<div id="page-analysis" style="display:none;">
+  <div class="section-header">
+    <h2 class="section-title">🧮 Number Analysis Tool</h2>
+  </div>
+  <div class="analysis-tool">
+    <div class="analysis-header">📋 Notepad Calculator</div>
+    <div class="analysis-body">
+      <div class="analysis-input-area">
+        <div class="form-label">Enter numbers (one per line, 0-99)</div>
+        <textarea class="notepad" id="analysis-input" placeholder="23&#10;45&#10;67&#10;10&#10;34" oninput="runAnalysis()"></textarea>
+        <div style="margin-top:10px;display:flex;gap:6px;">
+          <button class="btn btn-gold btn-sm" onclick="runAnalysis()">▶ Analyze</button>
+          <button class="btn btn-gray btn-sm" onclick="document.getElementById('analysis-input').value='';runAnalysis()">✕ Clear</button>
+        </div>
+      </div>
+      <div class="analysis-results" id="analysis-results">
+        <div class="empty-state" style="padding:30px 10px;">
+          <div class="empty-state-icon">🔢</div>
+          <div class="empty-state-text">Enter numbers to analyze</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end page-content -->
+</div><!-- end app-layout -->
+</div><!-- end agent-app -->
+
+<div id="toast-container" class="toast-container"></div>
+
+<script>
+// =====================================================
+// FIREBASE INIT
+// =====================================================
+const firebaseConfig = {
+  apiKey:"AIzaSyBklYTB9FOP13g-jKSUR7OSaRT4RLazw_Y",
+  authDomain:"satta-28662.firebaseapp.com",
+  projectId:"satta-28662",
+  storageBucket:"satta-28662.firebasestorage.app",
+  messagingSenderId:"930874157007",
+  appId:"1:930874157007:web:f48410bce16c0f522e54ba"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// =====================================================
+// HELPERS
+// =====================================================
+const NUM_WORDS={0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',19:'Unnis',20:'Bees',21:'Ikkis',22:'Bais',23:'Teis',24:'Chaubis',25:'Pachis',26:'Chhabis',27:'Sattais',28:'Atthais',29:'Untis',30:'Tees',31:'Ikatees',32:'Battees',33:'Tentees',34:'Chautees',35:'Paintees',36:'Chhattees',37:'Saintees',38:'Adatees',39:'Untaalis',40:'Chalis',41:'Ikatalis',42:'Byalis',43:'Tentalis',44:'Chavalis',45:'Paintalis',46:'Chhiyalis',47:'Saintalis',48:'Adtalis',49:'Unnchas',50:'Pachas',51:'Ikkyavan',52:'Bavan',53:'Tirpan',54:'Chauvan',55:'Pachpan',56:'Chhappan',57:'Sattavan',58:'Athavan',59:'Unsath',60:'Saath',61:'Iksath',62:'Basath',63:'Tirsath',64:'Chausath',65:'Painsath',66:'Chhiyasath',67:'Sarsath',68:'Adsath',69:'Unhattar',70:'Sattar',71:'Ikahattar',72:'Bahattar',73:'Tihattar',74:'Chauhattar',75:'Pachhattar',76:'Chhihattar',77:'Sathattar',78:'Athhattar',79:'Unasi',80:'Assi',81:'Ikyasi',82:'Bayasi',83:'Tirasi',84:'Chaurasi',85:'Pachasi',86:'Chhiyasi',87:'Satasi',88:'Athasi',89:'Nabbay',90:'Nabbe',91:'Ikyanabbe',92:'Banabbe',93:'Tiranabbe',94:'Chaunabbe',95:'Pachanabbe',96:'Chhiyanabbe',97:'Satanabbe',98:'Athanabbe',99:'Ninyanabbe'};
+function getWord(n){return NUM_WORDS[parseInt(n)]||n.toString();}
+function getTodayDateStr(){const d=new Date();return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;}
+function getTimeStr(){return new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+function showToast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+function formatINR(a){return '₹'+Number(a).toLocaleString('en-IN');}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+
+// =====================================================
+// STATE
+// =====================================================
+let currentAgent = null;
+let settings = {};
+let betCart = [];
+let myBets = [];
+let allResults = [];
+
+// =====================================================
+// AGENT LOGIN
+// =====================================================
+async function agentLogin() {
+  const mobile = document.getElementById('login-mobile').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+
+  if(!mobile||!password){errEl.style.display='block';errEl.textContent='Please enter mobile and password.';return;}
+
+  document.getElementById('login-btn').disabled=true;
+  document.getElementById('login-btn').textContent='Verifying...';
+
+  try {
+    const snap = await db.collection('agents').where('mobile','==',mobile).where('password','==',password).get();
+    if(!snap.empty){
+      const agent = snap.docs[0].data();
+      if(agent.status==='blocked'){
+        errEl.style.display='block';errEl.textContent='Your account is blocked. Contact admin.';
+        document.getElementById('login-btn').disabled=false;
+        document.getElementById('login-btn').textContent='LOGIN';
+        return;
+      }
+      currentAgent = {id:snap.docs[0].id,...agent};
+      document.getElementById('nav-agent-name').textContent = currentAgent.name||'';
+      document.getElementById('login-page').style.display='none';
+      document.getElementById('agent-app').style.display='block';
+      initAgentApp();
+    } else {
+      errEl.style.display='block';errEl.textContent='Invalid credentials.';
+    }
+  } catch(e){errEl.style.display='block';errEl.textContent='Error: '+e.message;}
+
+  document.getElementById('login-btn').disabled=false;
+  document.getElementById('login-btn').textContent='LOGIN';
+}
+
+function agentLogout(){
+  currentAgent=null;betCart=[];myBets=[];
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('agent-app').style.display='none';
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('login-page').style.display!=='none') agentLogin();
+});
+
+// =====================================================
+// INIT
+// =====================================================
+function initAgentApp() {
+  loadSettings();
+  loadTodayNumber();
+  loadMyBets();
+  loadResults();
+  showPage('home');
+}
+
+// =====================================================
+// PAGE NAV
+// =====================================================
+function showPage(page) {
+  document.querySelectorAll('.page-content > div').forEach(p=>p.style.display='none');
+  document.getElementById('page-'+page).style.display='block';
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  const el=document.getElementById('nav-'+page);
+  if(el) el.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// =====================================================
+// TODAY'S NUMBER (REALTIME)
+// =====================================================
+function loadTodayNumber() {
+  const today = getTodayDateStr();
+  db.collection('results').where('date','==',today).orderBy('timestamp','desc').limit(1)
+    .onSnapshot(snap=>{
+      if(!snap.empty){
+        const d=snap.docs[0].data();
+        document.getElementById('home-num').textContent=String(d.number).padStart(2,'0');
+        document.getElementById('home-word').textContent=getWord(d.number);
+        document.getElementById('home-time').textContent='Open Time: '+(d.time||'--');
+      } else {
+        document.getElementById('home-num').innerHTML='<span class="no-result">--</span>';
+        document.getElementById('home-word').textContent='Result not announced yet';
+        document.getElementById('home-time').textContent='Open Time: Pending';
+      }
+    });
+}
+
+// =====================================================
+// RESULTS
+// =====================================================
+function loadResults() {
+  db.collection('results').orderBy('timestamp','desc').limit(30)
+    .onSnapshot(snap=>{
+      allResults = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderResults();
+    });
+}
+
+function renderResults() {
+  document.getElementById('results-loading').style.display='none';
+  const tbody=document.getElementById('results-body');
+  if(!allResults.length){
+    document.getElementById('results-empty').style.display='flex';
+    return;
+  }
+  document.getElementById('results-table').style.display='table';
+  tbody.innerHTML=allResults.map(r=>`
+    <tr>
+      <td>${r.date||'--'}</td>
+      <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
+      <td>${r.numberWord||getWord(r.number)}</td>
+      <td>${r.time||'--'}</td>
+    </tr>
+  `).join('');
+}
+
+// =====================================================
+// SETTINGS
+// =====================================================
+function loadSettings() {
+  db.collection('settings').doc('main').onSnapshot(snap=>{
+    if(snap.exists) settings=snap.data();
+    else settings={harup1:10,harup2:20,harup3:50,harup4:100,harup5:200,harup6:300,harup7:500,harup8:700,harup9:1000,commissionRate:10};
+    renderHarupRef();
+  });
+}
+
+function renderHarupRef() {
+  const el=document.getElementById('harup-ref');
+  if(!el) return;
+  el.innerHTML=Array.from({length:9},(_,i)=>`
+    <div class="settings-item" style="text-align:center;">
+      <div style="font-size:11px;color:var(--text-muted);font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">H${i+1}</div>
+      <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:14px;">₹${settings['harup'+(i+1)]||0}</div>
+    </div>
+  `).join('');
+}
+
+function getHarupAmount(harupNum) {
+  return settings['harup'+harupNum] || 0;
+}
+
+function getCommissionRate() {
+  return settings.commissionRate || 10;
+}
+
+// =====================================================
+// BET SYSTEM
+// =====================================================
+function updateHarupAmount() {
+  const harup = document.getElementById('bet-harup').value;
+  if(harup) {
+    document.getElementById('bet-amount').value = getHarupAmount(harup);
+    calcSingleBet();
+  }
+}
+
+function calcSingleBet() {
+  const amount = parseFloat(document.getElementById('bet-amount').value)||0;
+  if(!amount){document.getElementById('single-bet-calc').style.display='none';return;}
+  const rate = getCommissionRate();
+  const commission = (amount*(rate/100)).toFixed(2);
+  const userAmount = (amount*((100-rate)/100)).toFixed(2);
+  const el=document.getElementById('single-bet-calc');
+  el.style.display='block';
+  el.innerHTML=`Commission: <strong>${formatINR(commission)}</strong> | Net Amount: <strong>${formatINR(userAmount)}</strong>`;
+}
+
+function addBetEntry() {
+  const num = parseInt(document.getElementById('bet-num').value);
+  const harup = document.getElementById('bet-harup').value;
+  const amount = parseFloat(document.getElementById('bet-amount').value)||0;
+
+  if(isNaN(num)||num<0||num>99){showToast('Enter valid number (0-99)','error');return;}
+  if(!harup){showToast('Select harup','error');return;}
+  if(amount<=0){showToast('Enter valid amount','error');return;}
+
+  const rate = getCommissionRate();
+  const commission = parseFloat((amount*(rate/100)).toFixed(2));
+  const userAmount = parseFloat((amount*((100-rate)/100)).toFixed(2));
+
+  betCart.push({num,harup,amount,commission,userAmount});
+  
+  // Reset form
+  document.getElementById('bet-num').value='';
+  document.getElementById('bet-harup').value='';
+  document.getElementById('bet-amount').value='';
+  document.getElementById('single-bet-calc').style.display='none';
+
+  renderBetCart();
+  showToast('Bet added!','success');
+}
+
+function removeBetEntry(idx) {
+  betCart.splice(idx,1);
+  renderBetCart();
+}
+
+function renderBetCart() {
+  const empty=document.getElementById('bet-cart-empty');
+  const list=document.getElementById('bet-cart-list');
+  const totals=document.getElementById('bet-cart-totals');
+  const submitBtn=document.getElementById('submit-bets-btn');
+
+  if(!betCart.length){
+    empty.style.display='block';list.innerHTML='';totals.style.display='none';submitBtn.disabled=true;
+    return;
+  }
+
+  empty.style.display='none';
+  totals.style.display='block';
+  submitBtn.disabled=false;
+
+  list.innerHTML = betCart.map((b,i)=>`
+    <div class="bet-summary-row" style="align-items:center;">
+      <span class="number-badge">${String(b.num).padStart(2,'0')}</span>
+      <span class="harup-badge">H${b.harup}</span>
+      <span class="amount-gold">${formatINR(b.amount)}</span>
+      <span class="amount-green" style="font-size:12px;">+${formatINR(b.commission)}</span>
+      <button class="btn btn-red btn-sm" onclick="removeBetEntry(${i})">✕</button>
+    </div>
+  `).join('');
+
+  const totalAmt = betCart.reduce((s,b)=>s+b.amount,0);
+  const totalComm = betCart.reduce((s,b)=>s+b.commission,0);
+  const totalNet = betCart.reduce((s,b)=>s+b.userAmount,0);
+
+  document.getElementById('cart-count').textContent = betCart.length;
+  document.getElementById('cart-total').textContent = formatINR(totalAmt);
+  document.getElementById('cart-commission').textContent = formatINR(totalComm);
+  document.getElementById('cart-net').textContent = formatINR(totalNet);
+}
+
+async function submitAllBets() {
+  if(!betCart.length){showToast('No bets to submit','error');return;}
+  if(!confirm(`Submit ${betCart.length} bet(s)?`)) return;
+
+  const submitBtn=document.getElementById('submit-bets-btn');
+  submitBtn.disabled=true;submitBtn.textContent='Submitting...';
+
+  const today=getTodayDateStr();
+  const time=getTimeStr();
+
+  try {
+    const batch=db.batch();
+    betCart.forEach(b=>{
+      const ref=db.collection('bets').doc();
+      batch.set(ref,{
+        agentId:currentAgent.id, agentName:currentAgent.name, agentMobile:currentAgent.mobile,
+        number:b.num, harup:b.harup, amount:b.amount,
+        commission:b.commission, userAmount:b.userAmount,
+        date:today, time, timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    betCart=[];
+    renderBetCart();
+    showToast('All bets submitted!','success');
+    showPage('my-bets');
+  } catch(e){showToast('Error: '+e.message,'error');}
+
+  submitBtn.disabled=false;submitBtn.textContent='✅ Submit All Bets';
+}
+
+// =====================================================
+// MY BETS
+// =====================================================
+function loadMyBets() {
+  if(!currentAgent) return;
+  const today=getTodayDateStr();
+  db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(100)
+    .onSnapshot(snap=>{
+      myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderMyBets();
+      
+      // Update home stats
+      const todayBets=myBets.filter(b=>b.date===today);
+      document.getElementById('my-bets-count').textContent=todayBets.length;
+      const totalAmt=todayBets.reduce((s,b)=>s+parseFloat(b.amount||0),0);
+      const totalComm=todayBets.reduce((s,b)=>s+parseFloat(b.commission||0),0);
+      document.getElementById('my-amount').textContent=formatINR(totalAmt);
+      document.getElementById('my-commission').textContent=formatINR(totalComm);
+    });
+}
+
+function renderMyBets() {
+  document.getElementById('mybets-loading').style.display='none';
+  const tbody=document.getElementById('mybets-body');
+  const tbl=document.getElementById('mybets-table');
+  if(!myBets.length){tbl.style.display='none';return;}
+  tbl.style.display='table';
+  tbody.innerHTML=myBets.map(b=>`
+    <tr>
+      <td><span class="number-badge">${String(b.number||0).padStart(2,'0')}</span></td>
+      <td><span class="harup-badge">H${b.harup||'?'}</span></td>
+      <td class="amount-gold">${formatINR(b.amount||0)}</td>
+      <td class="amount-green">${formatINR(b.commission||0)}</td>
+      <td class="amount-red">${formatINR(b.userAmount||0)}</td>
+      <td>${b.date||'--'}</td>
+      <td>${b.time||'--'}</td>
+    </tr>
+  `).join('');
+}
+
+// =====================================================
+// ANALYSIS TOOL
+// =====================================================
+function runAnalysis() {
+  const text=document.getElementById('analysis-input').value;
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l!=='');
+  const nums=lines.map(l=>parseInt(l)).filter(n=>!isNaN(n)&&n>=0&&n<=99);
+  const el=document.getElementById('analysis-results');
+
+  if(!nums.length){
+    el.innerHTML=`<div class="empty-state" style="padding:30px 10px;"><div class="empty-state-icon">🔢</div><div class="empty-state-text">Enter numbers to analyze</div></div>`;
+    return;
+  }
+
+  const total=nums.reduce((a,b)=>a+b,0);
+  const avg=(total/nums.length).toFixed(2);
+  const digitFreq={};
+  nums.forEach(n=>{const d=n%10;digitFreq[d]=(digitFreq[d]||0)+1;});
+  const topDigit=Object.entries(digitFreq).sort((a,b)=>b[1]-a[1])[0];
+  const lastNum=nums[nums.length-1];
+  const suggested=(lastNum+Math.round(avg)%10)%100;
+  const pattern=nums.map(n=>n%10).join(' → ');
+
+  el.innerHTML=`
+    <div class="result-item"><span class="result-key">Count</span><span class="result-val">${nums.length}</span></div>
+    <div class="result-item"><span class="result-key">Total</span><span class="result-val">${total}</span></div>
+    <div class="result-item"><span class="result-key">Average</span><span class="result-val">${avg}</span></div>
+    <div class="result-item"><span class="result-key">Top Last Digit</span><span class="result-val">${topDigit[0]}</span></div>
+    <div class="result-item"><span class="result-key">Suggested</span><span class="result-val" style="color:#68d391;">${String(suggested).padStart(2,'0')}</span></div>
+    <hr class="divider"/>
+    <div class="form-label" style="margin-bottom:6px;">Last Digit Pattern</div>
+    <div style="font-family:'Orbitron',monospace;font-size:11px;color:var(--text-muted);word-break:break-all;line-height:2;">${pattern}</div>
+  `;
+}
+</script>
+</body>
+</html>

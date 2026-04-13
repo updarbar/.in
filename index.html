@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +9,6 @@
 <title>UP Darbar</title>
 <link rel="stylesheet" href="style.css"/>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
@@ -17,7 +19,6 @@
     <span>& Agent Management System</span>
   </div>
   <div class="nav-links">
-    <a href="admin.html" class="nav-btn outline">Admin</a>
     <a href="agent.html" class="nav-btn gold">Agent Login</a>
   </div>
 </nav>
@@ -40,14 +41,10 @@
 
     <section>
       <div class="section-header">
-        <h2 class="section-title" Monthly History</h2>
+        <h2 class="section-title">📅 Monthly History</h2>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
-        <div id="history-loading" class="loading">
-          <div class="spinner"></div>
-          Loading history...
-        </div>
-        <table class="history-table" id="history-table" style="display:none;">
+        <table class="history-table">
           <thead>
             <tr>
               <th>Date</th>
@@ -57,10 +54,6 @@
           </thead>
           <tbody id="history-body"></tbody>
         </table>
-        <div id="history-empty" class="empty-state" style="display:none;">
-          <div class="empty-state-icon">📊</div>
-          <div class="empty-state-text">No history available</div>
-        </div>
       </div>
     </section>
 
@@ -95,13 +88,13 @@
           <div class="card-title">Quick Stats</div>
           <div class="grid-2">
             <div class="stat-card">
-              <div class="stat-icon">Today </div>
+              <div class="stat-icon">📅</div>
               <div class="stat-value" id="quick-date" style="font-size:16px;">--</div>
               <div class="stat-label">Today's Date</div>
             </div>
             <div class="stat-card">
               <div class="stat-icon">🕐</div>
-              <div class="stat-value" id="quick-time" style="font-size:16px;">--</div>
+              <div class="stat-value" id="quick-time" style="font-size:18px;">--</div>
               <div class="stat-label">Current Time</div>
             </div>
           </div>
@@ -109,9 +102,7 @@
       </section>
     </div>
 
-  </div></div><div id="toast-container" class="toast-container"></div>
-
-<script>
+  </div></div><script>
 // =================== HOME PAGE LOGIC ===================
 
 const firebaseConfig = {
@@ -120,99 +111,17 @@ const firebaseConfig = {
   projectId: "satta-28662",
   storageBucket: "satta-28662.firebasestorage.app",
   messagingSenderId: "930874157007",
-  appId: "1:930874157007:web:f48410bce16c0f522e54ba",
-  measurementId: "G-X2599ZJZ1Z"
+  appId: "1:930874157007:web:f48410bce16c0f522e54ba"
 };
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let isResultAnnounced = false; 
+let allResults = [];
+let todayResultData = null;
+let wasAfter6 = false;
 
-function getTodayDateStr() {
-  const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-}
-
-function updateClock() {
-  const now = new Date();
-  const timeOpts = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-  const dateOpts = { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric' };
-  
-  document.getElementById('quick-time').textContent = now.toLocaleTimeString('en-IN', timeOpts);
-  document.getElementById('quick-date').textContent = now.toLocaleDateString('en-IN', dateOpts);
-
-  if (!isResultAnnounced) {
-    const target = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    target.setHours(18, 0, 0, 0); 
-    
-    let diff = target - now;
-    const heroTimeEl = document.getElementById('hero-time');
-    
-    if (diff > 0) {
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / 1000 / 60) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      heroTimeEl.textContent = `Result opens in: ${h}h ${m}m ${s}s`;
-      heroTimeEl.style.color = "#fff";
-    } else {
-      heroTimeEl.textContent = "Checking for Today's Result...";
-      heroTimeEl.style.color = "#d4af37"; 
-    }
-  }
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-const today = getTodayDateStr();
-db.collection('results').where('date', '==', today)
-  .orderBy('timestamp', 'desc')
-  .limit(1)
-  .onSnapshot(snap => {
-    if (!snap.empty) {
-      isResultAnnounced = true; 
-      const d = snap.docs[0].data();
-      document.getElementById('hero-num').textContent = String(d.number).padStart(2, '0');
-      document.getElementById('hero-word').textContent = getWord(d.number);
-      document.getElementById('hero-time').textContent = 'Opened at: ' + (d.time || '6:00 PM');
-      document.getElementById('hero-time').style.color = '#68d391'; 
-    } else {
-      isResultAnnounced = false; 
-      document.getElementById('hero-num').innerHTML = '<span class="no-result">--</span>';
-      document.getElementById('hero-word').textContent = 'Result not announced yet';
-    }
-  }, err => console.error(err));
-
-db.collection('results')
-  .orderBy('timestamp', 'desc')
-  .limit(30)
-  .onSnapshot(snap => {
-    document.getElementById('history-loading').style.display = 'none';
-    
-    if (snap.empty) {
-      document.getElementById('history-empty').style.display = 'flex';
-      return;
-    }
-
-    document.getElementById('history-table').style.display = 'table';
-    const tbody = document.getElementById('history-body');
-    tbody.innerHTML = '';
-
-    snap.docs.forEach(doc => {
-      const d = doc.data();
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${d.date || '--'}</td>
-        <td><span class="number-badge">${String(d.number).padStart(2,'0')}</span></td>
-        <td>${d.time || '--'}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }, err => {
-    document.getElementById('history-loading').style.display = 'none';
-    document.getElementById('history-empty').style.display = 'flex';
-  });
-
+// Helpers
 const NUM_WORDS_LOCAL = {
   0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',
   11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',
@@ -232,6 +141,68 @@ const NUM_WORDS_LOCAL = {
 };
 function getWord(n) { return NUM_WORDS_LOCAL[parseInt(n)] || n.toString(); }
 
+function getTodayDateStr() { 
+  const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"})); 
+  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; 
+}
+
+// 6:00 PM HIDE LOGIC FOR PUBLIC USERS
+function updateUIForTime() {
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  const isAfter6 = now.getHours() >= 18; // 18 = 6:00 PM
+
+  // Hero Section (Today's Result)
+  if (todayResultData && isAfter6) {
+    document.getElementById('hero-num').textContent = String(todayResultData.number).padStart(2, '0');
+    document.getElementById('hero-word').textContent = getWord(todayResultData.number);
+    document.getElementById('hero-time').textContent = 'Opened at: ' + (todayResultData.time || '6:00 PM');
+    document.getElementById('hero-time').style.color = '#68d391';
+  } else {
+    document.getElementById('hero-num').innerHTML = '<span class="no-result">--</span>';
+    document.getElementById('hero-word').textContent = 'Result not announced yet';
+    document.getElementById('hero-time').textContent = 'Open Time: 6:00 PM';
+    document.getElementById('hero-time').style.color = '#fff';
+  }
+
+  // Monthly History Filter (Hide today's result if before 6 PM)
+  const today = getTodayDateStr();
+  const visibleResults = allResults.filter(r => { 
+    if (r.date === today && !isAfter6) return false; 
+    return true; 
+  });
+  
+  document.getElementById('history-body').innerHTML = visibleResults.map(r => `
+    <tr>
+      <td>${r.date}</td>
+      <td><span class="number-badge">${String(r.number).padStart(2,'0')}</span></td>
+      <td>${r.time}</td>
+    </tr>
+  `).join('');
+}
+
+// Live clock
+function updateClock() {
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  document.getElementById('quick-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
+  document.getElementById('quick-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+
+  const isAfter6 = now.getHours() >= 18;
+  if (isAfter6 && !wasAfter6) { 
+    wasAfter6 = true; 
+    updateUIForTime(); 
+  }
+}
+setInterval(updateClock, 1000); 
+updateClock();
+
+// Fetch Data
+db.collection('results').orderBy('timestamp', 'desc').limit(30).onSnapshot(snap => {
+  allResults = snap.docs.map(d => d.data());
+  todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
+  updateUIForTime();
+});
+
+// Analysis Tool
 function runAnalysis() {
   const text = document.getElementById('analysis-input').value;
   const lines = text.split('\n').map(l => l.trim()).filter(l => l !== '');

@@ -119,9 +119,8 @@ const db = firebase.firestore();
 
 let allResults = [];
 let todayResultData = null;
-let wasAfter6 = false;
 
-// Helpers
+// Word Dictionary
 const NUM_WORDS_LOCAL = {
   0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',
   11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',
@@ -146,28 +145,90 @@ function getTodayDateStr() {
   return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`; 
 }
 
-// 6:00 PM HIDE LOGIC FOR PUBLIC USERS
-function updateUIForTime() {
-  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  const isAfter6 = now.getHours() >= 18; // 18 = 6:00 PM
+// Advanced Time Parser (Detects Admin Set Time)
+function parseTimeStr(timeStr) {
+  const target = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  if (!timeStr) { target.setHours(18, 0, 0, 0); return target; }
+  
+  let hours = 18, mins = 0;
+  try {
+      let tStr = timeStr.toUpperCase().trim();
+      if (tStr.includes('PM') || tStr.includes('AM')) {
+        let [time, modifier] = tStr.split(' ');
+        let [h, m] = time.split(':');
+        hours = parseInt(h); mins = parseInt(m);
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+      } else {
+        let [h, m] = tStr.split(':');
+        hours = parseInt(h); mins = parseInt(m);
+      }
+  } catch(e) { hours = 18; mins = 0; }
+  target.setHours(hours, mins, 0, 0);
+  return target;
+}
 
-  // Hero Section (Today's Result)
-  if (todayResultData && isAfter6) {
+function formatTimeFriendly(timeStr) {
+  if(!timeStr) return "6:00 PM";
+  let upper = timeStr.toUpperCase();
+  if(upper.includes('AM') || upper.includes('PM')) return timeStr;
+  let [h, m] = timeStr.split(':');
+  let hours = parseInt(h);
+  let ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; 
+  return `${hours}:${m} ${ampm}`;
+}
+
+// Live clock & Logic Check
+function updateClock() {
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  document.getElementById('quick-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
+  document.getElementById('quick-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+
+  // Target Time Setup
+  let target = new Date(now);
+  target.setHours(18, 0, 0, 0); // Default 6 PM
+  let displayTimeStr = "6:00 PM";
+
+  if (todayResultData && todayResultData.time) {
+    target = parseTimeStr(todayResultData.time);
+    displayTimeStr = formatTimeFriendly(todayResultData.time);
+  }
+
+  const isOpened = now >= target;
+
+  // Hero Result Section
+  if (todayResultData && isOpened) {
     document.getElementById('hero-num').textContent = String(todayResultData.number).padStart(2, '0');
     document.getElementById('hero-word').textContent = getWord(todayResultData.number);
-    document.getElementById('hero-time').textContent = 'Opened at: ' + (todayResultData.time || '6:00 PM');
+    document.getElementById('hero-time').textContent = 'Opened at: ' + displayTimeStr;
     document.getElementById('hero-time').style.color = '#68d391';
+  } else if (todayResultData && !isOpened) {
+    // Admin set the result, waiting for time to arrive (COUNTDOWN)
+    let diff = target - now;
+    const h = String(Math.floor((diff / 3600000) % 24)).padStart(2, '0');
+    const m = String(Math.floor((diff / 60000) % 60)).padStart(2, '0');
+    const s = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+    
+    document.getElementById('hero-num').innerHTML = '<span class="no-result">--</span>';
+    document.getElementById('hero-word').textContent = 'Result is ready! Waiting for open time...';
+    document.getElementById('hero-time').textContent = `Opens in: ${h}h ${m}m ${s}s (${displayTimeStr})`;
+    document.getElementById('hero-time').style.color = '#d4af37'; // Gold
   } else {
     document.getElementById('hero-num').innerHTML = '<span class="no-result">--</span>';
-    document.getElementById('hero-word').textContent = 'Result not announced yet';
-    document.getElementById('hero-time').textContent = 'Open Time: 6:00 PM';
+    document.getElementById('hero-word').textContent = 'Waiting for result...';
+    document.getElementById('hero-time').textContent = 'Scheduled for: ' + displayTimeStr;
     document.getElementById('hero-time').style.color = '#fff';
   }
 
-  // Monthly History Filter (Hide today's result if before 6 PM)
+  // Monthly History Filter
   const today = getTodayDateStr();
   const visibleResults = allResults.filter(r => { 
-    if (r.date === today && !isAfter6) return false; 
+    if (r.date === today) {
+        const rTarget = parseTimeStr(r.time);
+        if (now < rTarget) return false; 
+    }
     return true; 
   });
   
@@ -175,31 +236,16 @@ function updateUIForTime() {
     <tr>
       <td>${r.date}</td>
       <td><span class="number-badge">${String(r.number).padStart(2,'0')}</span></td>
-      <td>${r.time}</td>
+      <td>${formatTimeFriendly(r.time)}</td>
     </tr>
   `).join('');
 }
-
-// Live clock
-function updateClock() {
-  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  document.getElementById('quick-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
-  document.getElementById('quick-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
-
-  const isAfter6 = now.getHours() >= 18;
-  if (isAfter6 && !wasAfter6) { 
-    wasAfter6 = true; 
-    updateUIForTime(); 
-  }
-}
 setInterval(updateClock, 1000); 
-updateClock();
 
 // Fetch Data
 db.collection('results').orderBy('timestamp', 'desc').limit(30).onSnapshot(snap => {
   allResults = snap.docs.map(d => d.data());
   todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
-  updateUIForTime();
 });
 
 // Analysis Tool
@@ -231,26 +277,11 @@ function runAnalysis() {
   const digitPattern = nums.map(n => n % 10).join(' → ');
 
   el.innerHTML = `
-    <div class="result-item">
-      <span class="result-key">Count</span>
-      <span class="result-val">${count}</span>
-    </div>
-    <div class="result-item">
-      <span class="result-key">Total</span>
-      <span class="result-val">${total}</span>
-    </div>
-    <div class="result-item">
-      <span class="result-key">Average</span>
-      <span class="result-val">${avg}</span>
-    </div>
-    <div class="result-item">
-      <span class="result-key">Top Last Digit</span>
-      <span class="result-val">${topDigit}</span>
-    </div>
-    <div class="result-item">
-      <span class="result-key">Suggested</span>
-      <span class="result-val" style="color:#68d391;">${String(suggested).padStart(2,'0')}</span>
-    </div>
+    <div class="result-item"><span class="result-key">Count</span><span class="result-val">${count}</span></div>
+    <div class="result-item"><span class="result-key">Total</span><span class="result-val">${total}</span></div>
+    <div class="result-item"><span class="result-key">Average</span><span class="result-val">${avg}</span></div>
+    <div class="result-item"><span class="result-key">Top Last Digit</span><span class="result-val">${topDigit}</span></div>
+    <div class="result-item"><span class="result-key">Suggested</span><span class="result-val" style="color:#68d391;">${String(suggested).padStart(2,'0')}</span></div>
     <hr class="divider"/>
     <div class="form-label" style="margin-bottom:6px;">Last Digit Pattern</div>
     <div style="font-family:'Orbitron',monospace;font-size:11px;color:var(--text-muted);word-break:break-all;line-height:2;">

@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +17,9 @@
   .live-clock-time { font-size: 16px; color: #d4af37; font-family: 'Orbitron', monospace; letter-spacing: 1px;}
   .live-clock-date { font-size: 12px; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
   .small-text { font-size: 11px; color: #888; margin-bottom: 8px; display: block; }
+  .search-bar { width: 100%; padding: 10px 15px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
+  .search-bar:focus { outline: none; border-color: var(--gold); }
+  .win-badge { background: rgba(104, 211, 145, 0.2); color: #68d391; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
 </style>
 </head>
 <body>
@@ -107,7 +112,7 @@
     <div class="stat-card">
       <div class="stat-icon">💸</div>
       <div class="stat-value" id="my-commission" style="font-size:18px;color:#68d391;">₹0</div>
-      <div class="stat-label">My Commission</div>
+      <div class="stat-label">My Play Commission</div>
     </div>
   </div>
 
@@ -130,17 +135,22 @@
     <div class="card card-gold">
       <div class="card-title">Add Bet Entry</div>
       
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label">Customer Name (Optional but Recommended)</label>
+        <input type="text" id="bet-customer" class="form-input" placeholder="e.g. Rahul Kumar"/>
+      </div>
+      
       <div class="bet-box">
-        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">1. Place Number Bet</div>
-        <span class="small-text">Separate multiple numbers with commas (e.g. 10, 25, 45)</span>
+        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">1. Place Number Bet (1 ka 90)</div>
+        <span class="small-text">For same amount: 10, 25, 45 | For different amounts: 10=50, 25=100</span>
         <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
           <div>
             <label class="form-label">Number(s) (0-99)</label>
-            <input type="text" id="bet-num-input" class="form-input" placeholder="12, 45, 99"/>
+            <input type="text" id="bet-num-input" class="form-input" placeholder="e.g. 10=50, 25=100"/>
           </div>
           <div>
-            <label class="form-label">Amount ₹ (each)</label>
-            <input type="number" id="bet-num-amount" class="form-input" min="1" placeholder="100"/>
+            <label class="form-label">Amount ₹</label>
+            <input type="number" id="bet-num-amount" class="form-input" min="1" placeholder="Default"/>
           </div>
           <div>
             <button class="btn btn-gold" onclick="addNumberBet()">+ Add</button>
@@ -149,16 +159,16 @@
       </div>
 
       <div class="bet-box">
-        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">2. Place Harup Bet</div>
-        <span class="small-text">Separate multiple harups with commas (e.g. 1, 5, 9)</span>
+        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">2. Place Harup Bet (1 ka 9)</div>
+        <span class="small-text">For same amount: 1, 5, 9 | For different amounts: 1=50, 4=100</span>
         <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
           <div>
             <label class="form-label">Harup(s) (0-9)</label>
-            <input type="text" id="bet-harup-input" class="form-input" placeholder="1, 4, 7"/>
+            <input type="text" id="bet-harup-input" class="form-input" placeholder="e.g. 1=50, 4=100"/>
           </div>
           <div>
-            <label class="form-label">Amount ₹ (each)</label>
-            <input type="number" id="bet-harup-amount" class="form-input" min="1" placeholder="100"/>
+            <label class="form-label">Amount ₹</label>
+            <input type="number" id="bet-harup-amount" class="form-input" min="1" placeholder="Default"/>
           </div>
           <div>
             <button class="btn btn-blue" onclick="addHarupBet()">+ Add</button>
@@ -181,9 +191,7 @@
         <div id="bet-cart-list"></div>
         <div id="bet-cart-totals" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
           <div class="bet-summary-row"><span>Total Bets</span><span class="amount-gold" id="cart-count">0</span></div>
-          <div class="bet-summary-row"><span>Total Amount</span><span class="amount-gold" id="cart-total">₹0</span></div>
-          <div class="bet-summary-row"><span>Your Commission</span><span class="amount-green" id="cart-commission">₹0</span></div>
-          <div class="bet-summary-row"><span>Net Amount</span><span class="amount-red" id="cart-net">₹0</span></div>
+          <div class="bet-summary-row"><span>Total Play Amount</span><span class="amount-gold" id="cart-total">₹0</span></div>
         </div>
       </div>
     </div>
@@ -192,15 +200,21 @@
 
 <div id="page-my-bets" style="display:none;">
   <div class="section-header">
-    <h2 class="section-title">📋 My Bets</h2>
+    <h2 class="section-title">📋 My Bets & Search</h2>
   </div>
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" style="padding:0;overflow:hidden; padding:15px;">
+    
+    <input type="text" id="search-bets" class="search-bar" placeholder="🔍 Search by Customer Name, Number or Harup..." oninput="filterMyBets()"/>
+
     <div id="mybets-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <div style="overflow-x:auto;">
-      <table class="history-table" id="mybets-table" style="display:none;">
-        <thead><tr><th>Bet Type & Value</th><th>Amount</th><th>Commission</th><th>Net</th><th>Date</th><th>Time</th></tr></thead>
+      <table class="history-table" id="mybets-table" style="display:none; width: 100%;">
+        <thead><tr><th>Customer</th><th>Bet On</th><th>Play Amt</th><th>Win (If Pass)</th><th>Time</th></tr></thead>
         <tbody id="mybets-body"></tbody>
       </table>
+      <div id="mybets-empty" class="empty-state" style="display:none;">
+        <div class="empty-state-text">No bets found matching search.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -440,40 +454,61 @@ function loadSettings() {
 function getCommissionRate() { return settings.commissionRate || 10; }
 
 // =====================================================
-// BET SYSTEM (FULLY SEPARATED)
+// BET SYSTEM (SUPPORT FOR DIFFERENT AMOUNTS & CUSTOMER NAME)
 // =====================================================
 
-// Common function to process both types
-function processBetEntries(type, inputStr, amount) {
+function processBetEntries(type, inputStr, defaultAmount) {
   if(!inputStr) return showToast(`Please enter ${type}(s)`, 'error');
-  if(isNaN(amount) || amount <= 0) return showToast('Enter a valid amount for the bets', 'error');
-
+  
+  const customerName = document.getElementById('bet-customer').value.trim() || 'Guest';
   const items = inputStr.split(',').map(s => s.trim()).filter(s => s !== '');
+  
   if(items.length === 0) return showToast(`Please enter valid ${type}(s)`, 'error');
 
   let added = 0;
   const rate = getCommissionRate();
-  const commission = parseFloat((amount * (rate/100)).toFixed(2));
-  const userAmount = parseFloat((amount * ((100-rate)/100)).toFixed(2));
 
   items.forEach(val => {
+     let parsedVal = val;
+     let itemAmount = defaultAmount;
+
+     // Check if user entered format like "15=50"
+     if(val.includes('=')) {
+        let parts = val.split('=');
+        parsedVal = parts[0].trim();
+        itemAmount = parseFloat(parts[1].trim());
+     } else {
+        itemAmount = parseFloat(defaultAmount);
+     }
+
+     if(isNaN(itemAmount) || itemAmount <= 0) {
+        showToast(`Skipped ${parsedVal} due to invalid amount`, 'error');
+        return;
+     }
+
+     const commission = parseFloat((itemAmount * (rate/100)).toFixed(2));
+     const userAmount = parseFloat((itemAmount * ((100-rate)/100)).toFixed(2));
+     
+     // 1 ka 100 for number (User gets 90x), 1 ka 10 for harup (User gets 9x)
+     let userWin = 0;
+
      if(type === 'number') {
-        const num = parseInt(val);
+        const num = parseInt(parsedVal);
         if(isNaN(num) || num < 0 || num > 99) {
-           showToast(`Skipped invalid number: ${val}`, 'error');
+           showToast(`Skipped invalid number: ${parsedVal}`, 'error');
            return;
         }
-        // ONLY number is passed, harup is completely empty
-        betCart.push({ type: 'number', num: num, harup: '', amount, commission, userAmount });
+        userWin = itemAmount * 90; // User potential win
+        betCart.push({ type: 'number', num: num, harup: '', amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      } else if (type === 'harup') {
-        const h = parseInt(val);
+        const h = parseInt(parsedVal);
         if(isNaN(h) || h < 0 || h > 9) {
-           showToast(`Skipped invalid harup: ${val}`, 'error');
+           showToast(`Skipped invalid harup: ${parsedVal}`, 'error');
            return;
         }
-        // ONLY harup is passed, number is completely empty
-        betCart.push({ type: 'harup', num: '', harup: h, amount, commission, userAmount });
+        userWin = itemAmount * 9; // User potential win
+        betCart.push({ type: 'harup', num: '', harup: h, amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      }
   });
@@ -486,17 +521,17 @@ function processBetEntries(type, inputStr, amount) {
   }
 }
 
-// 1. ADD ONLY NUMBER
+// 1. ADD NUMBER
 function addNumberBet() {
   const str = document.getElementById('bet-num-input').value;
-  const amt = parseFloat(document.getElementById('bet-num-amount').value);
+  const amt = document.getElementById('bet-num-amount').value;
   processBetEntries('number', str, amt);
 }
 
-// 2. ADD ONLY HARUP
+// 2. ADD HARUP
 function addHarupBet() {
   const str = document.getElementById('bet-harup-input').value;
-  const amt = parseFloat(document.getElementById('bet-harup-amount').value);
+  const amt = document.getElementById('bet-harup-amount').value;
   processBetEntries('harup', str, amt);
 }
 
@@ -521,24 +556,24 @@ function renderBetCart() {
   submitBtn.disabled=false;
 
   list.innerHTML = betCart.map((b,i)=>`
-    <div class="bet-summary-row" style="align-items:center;">
-      ${b.type === 'number' 
-          ? `<span class="number-badge" style="background:#d4af37;">Number: ${String(b.num).padStart(2,'0')}</span>` 
-          : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
-      <span class="amount-gold">${formatINR(b.amount)}</span>
-      <span class="amount-green" style="font-size:12px;">+${formatINR(b.commission)}</span>
-      <button class="btn btn-red btn-sm" onclick="removeBetEntry(${i})">✕</button>
+    <div class="bet-summary-row" style="align-items:center; flex-wrap: wrap;">
+      <div style="flex: 1; display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; color:#aaa;">👤 ${b.customerName}</span>
+        ${b.type === 'number' 
+            ? `<span class="number-badge" style="background:#d4af37;">Num: ${String(b.num).padStart(2,'0')}</span>` 
+            : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="amount-gold">${formatINR(b.amount)}</span>
+        <span class="win-badge">Win: ${formatINR(b.userWin)}</span>
+        <button class="btn btn-red btn-sm" onclick="removeBetEntry(${i})">✕</button>
+      </div>
     </div>
   `).join('');
 
   const totalAmt = betCart.reduce((s,b)=>s+b.amount,0);
-  const totalComm = betCart.reduce((s,b)=>s+b.commission,0);
-  const totalNet = betCart.reduce((s,b)=>s+b.userAmount,0);
-
   document.getElementById('cart-count').textContent = betCart.length;
   document.getElementById('cart-total').textContent = formatINR(totalAmt);
-  document.getElementById('cart-commission').textContent = formatINR(totalComm) + ` (${getCommissionRate()}%)`;
-  document.getElementById('cart-net').textContent = formatINR(totalNet);
 }
 
 async function submitAllBets() {
@@ -557,17 +592,20 @@ async function submitAllBets() {
       const ref=db.collection('bets').doc();
       batch.set(ref,{
         agentId:currentAgent.id, agentName:currentAgent.name, agentMobile:currentAgent.mobile,
+        customerName: b.customerName,
         type: b.type, 
-        // strictly saving only the relevant value in the database
         number: b.type === 'number' ? b.num : null, 
         harup: b.type === 'harup' ? b.harup : null, 
         amount: b.amount,
-        commission:b.commission, userAmount:b.userAmount,
+        commission:b.commission, 
+        userAmount:b.userAmount,
+        userWin: b.userWin, // Storing potential win
         date:today, time, timestamp:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
     await batch.commit();
     betCart=[];
+    document.getElementById('bet-customer').value = ''; // Reset Customer Name
     renderBetCart();
     showToast('All bets submitted!','success');
     showPage('my-bets');
@@ -577,7 +615,7 @@ async function submitAllBets() {
 }
 
 // =====================================================
-// MY BETS
+// MY BETS & SEARCH FILTERING
 // =====================================================
 function loadMyBets() {
   if(!currentAgent) return;
@@ -585,7 +623,7 @@ function loadMyBets() {
   db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(100)
     .onSnapshot(snap=>{
       myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderMyBets();
+      renderMyBets(myBets); // Render initially with all data
       
       const todayBets=myBets.filter(b=>b.date===today);
       document.getElementById('my-bets-count').textContent=todayBets.length;
@@ -596,25 +634,44 @@ function loadMyBets() {
     });
 }
 
-function renderMyBets() {
+// Live Search Function
+function filterMyBets() {
+  const query = document.getElementById('search-bets').value.toLowerCase();
+  const filtered = myBets.filter(b => {
+    const cust = (b.customerName || '').toLowerCase();
+    const num = (b.number !== null && b.number !== undefined) ? b.number.toString() : '';
+    const h = (b.harup !== null && b.harup !== undefined) ? b.harup.toString() : '';
+    return cust.includes(query) || num.includes(query) || h.includes(query);
+  });
+  renderMyBets(filtered);
+}
+
+function renderMyBets(dataToRender) {
   document.getElementById('mybets-loading').style.display='none';
   const tbody=document.getElementById('mybets-body');
   const tbl=document.getElementById('mybets-table');
-  if(!myBets.length){tbl.style.display='none';return;}
+  const empty=document.getElementById('mybets-empty');
+
+  if(!dataToRender || !dataToRender.length){
+    tbl.style.display='none';
+    empty.style.display='block';
+    return;
+  }
+
+  empty.style.display='none';
   tbl.style.display='table';
   
-  tbody.innerHTML=myBets.map(b=>`
+  tbody.innerHTML=dataToRender.map(b=>`
     <tr>
+      <td style="font-size:12px; font-weight:bold; color:var(--gold);">${b.customerName || 'Guest'}</td>
       <td>
         ${b.type === 'number' || b.harup === null 
            ? `<span class="number-badge" style="background:#d4af37;">Num: ${String(b.number||0).padStart(2,'0')}</span>` 
            : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
       </td>
       <td class="amount-gold">${formatINR(b.amount||0)}</td>
-      <td class="amount-green">${formatINR(b.commission||0)}</td>
-      <td class="amount-red">${formatINR(b.userAmount||0)}</td>
-      <td>${b.date||'--'}</td>
-      <td>${b.time||'--'}</td>
+      <td><span class="win-badge">${formatINR(b.userWin||0)}</span></td>
+      <td style="font-size:11px; color:#888;">${b.date}<br/>${b.time}</td>
     </tr>
   `).join('');
 }
@@ -656,5 +713,3 @@ function runAnalysis() {
 </script>
 </body>
 </html>
-
-```

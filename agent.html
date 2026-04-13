@@ -62,7 +62,7 @@
       <span class="sidebar-icon">📋</span> My Bets
     </button>
     <button class="sidebar-link" onclick="showPage('results')" id="nav-results">
-      <span class="sidebar-icon">📅</span> Results
+      <span class="sidebar-icon">Today</span> Results
     </button>
     <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis">
       <span class="sidebar-icon">🧮</span> Analysis Tool
@@ -212,7 +212,7 @@
 <!-- ============ RESULTS ============ -->
 <div id="page-results" style="display:none;">
   <div class="section-header">
-    <h2 class="section-title">📅 Results History</h2>
+    <h2 class="section-title"> Results History</h2>
   </div>
   <div class="card" style="padding:0;overflow:hidden;">
     <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
@@ -221,7 +221,7 @@
       <tbody id="results-body"></tbody>
     </table>
     <div id="results-empty" class="empty-state" style="display:none;padding:40px;">
-      <div class="empty-state-icon">📅</div>
+      <div class="empty-state-icon">Today</div>
       <div class="empty-state-text">No results available</div>
     </div>
   </div>

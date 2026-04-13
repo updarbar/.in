@@ -1,7 +1,6 @@
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +9,6 @@
 <title>UP Darbar - Agent Panel</title>
 <link rel="stylesheet" href="style.css"/>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
   .bet-box { background: var(--bg-secondary, #1a1a1a); border: 1px dashed var(--border, #333); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
@@ -207,7 +205,6 @@
     <h2 class="section-title">📋 My Bets & Search</h2>
   </div>
   <div class="card" style="padding:0;overflow:hidden; padding:15px;">
-    
     <input type="text" id="search-bets" class="search-bar" placeholder="🔍 Search by Customer Name, Number or Harup..." oninput="filterMyBets()"/>
 
     <div id="mybets-loading" class="loading"><div class="spinner"></div>Loading...</div>
@@ -228,7 +225,6 @@
     <h2 class="section-title">📅 Results History</h2>
   </div>
   <div class="card" style="padding:0;overflow:hidden;">
-    <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <table class="history-table" id="results-table" style="display:none;">
       <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
       <tbody id="results-body"></tbody>
@@ -301,7 +297,7 @@ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // =====================================================
-// HELPERS (STRICT IST TIMEZONE)
+// HELPERS
 // =====================================================
 const NUM_WORDS={0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',19:'Unnis',20:'Bees',21:'Ikkis',22:'Bais',23:'Teis',24:'Chaubis',25:'Pachis',26:'Chhabis',27:'Sattais',28:'Atthais',29:'Untis',30:'Tees',31:'Ikatees',32:'Battees',33:'Tentees',34:'Chautees',35:'Paintees',36:'Chhattees',37:'Saintees',38:'Adatees',39:'Untaalis',40:'Chalis',41:'Ikatalis',42:'Byalis',43:'Tentalis',44:'Chavalis',45:'Paintalis',46:'Chhiyalis',47:'Saintalis',48:'Adtalis',49:'Unnchas',50:'Pachas',51:'Ikkyavan',52:'Bavan',53:'Tirpan',54:'Chauvan',55:'Pachpan',56:'Chhappan',57:'Sattavan',58:'Athavan',59:'Unsath',60:'Saath',61:'Iksath',62:'Basath',63:'Tirsath',64:'Chausath',65:'Painsath',66:'Chhiyasath',67:'Sarsath',68:'Adsath',69:'Unhattar',70:'Sattar',71:'Ikahattar',72:'Bahattar',73:'Tihattar',74:'Chauhattar',75:'Pachhattar',76:'Chhihattar',77:'Sathattar',78:'Athhattar',79:'Unasi',80:'Assi',81:'Ikyasi',82:'Bayasi',83:'Tirasi',84:'Chaurasi',85:'Pachasi',86:'Chhiyasi',87:'Satasi',88:'Athasi',89:'Nabbay',90:'Nabbe',91:'Ikyanabbe',92:'Banabbe',93:'Tiranabbe',94:'Chaunabbe',95:'Pachanabbe',96:'Chhiyanabbe',97:'Satanabbe',98:'Athanabbe',99:'Ninyanabbe'};
 function getWord(n){return NUM_WORDS[parseInt(n)]||n.toString();}
@@ -326,68 +322,42 @@ let betCart = [];
 let myBets = [];
 let allResults = [];
 let todayResultData = null;
-let wasAfter6 = false;
 
 // =====================================================
-// 6:00 PM HIDE LOGIC FOR AGENT
+// PARSER (ADMIN SET TIME)
 // =====================================================
-function updateUIForTime() {
-  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  const isAfter6 = now.getHours() >= 18; // 18 is 6:00 PM
-
-  // Dashboard Hero Section
-  if (todayResultData && isAfter6) {
-    document.getElementById('home-num').textContent = String(todayResultData.number).padStart(2, '0');
-    document.getElementById('home-word').textContent = getWord(todayResultData.number);
-    document.getElementById('home-time').textContent = 'Opened at: ' + (todayResultData.time || '6:00 PM');
-    document.getElementById('home-time').style.color = '#68d391';
-  } else {
-    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
-    document.getElementById('home-word').textContent = 'Result not announced yet';
-    document.getElementById('home-time').textContent = 'Open Time: 6:00 PM';
-    document.getElementById('home-time').style.color = '#fff';
-  }
-
-  // Results History Table Filter (Hide today's result if before 6 PM)
-  const today = getTodayDateStr();
-  const visibleResults = allResults.filter(r => {
-    if (r.date === today && !isAfter6) return false;
-    return true;
-  });
+function parseTimeStr(timeStr) {
+  const target = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  if (!timeStr) { target.setHours(18, 0, 0, 0); return target; }
   
-  const tbody = document.getElementById('results-body');
-  if(!visibleResults.length){
-    document.getElementById('results-table').style.display='none';
-    document.getElementById('results-empty').style.display='flex';
-  } else {
-    document.getElementById('results-table').style.display='table';
-    document.getElementById('results-empty').style.display='none';
-    tbody.innerHTML = visibleResults.map(r=>`
-      <tr>
-        <td>${r.date||'--'}</td>
-        <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
-        <td>${r.numberWord||getWord(r.number)}</td>
-        <td>${r.time||'--'}</td>
-      </tr>
-    `).join('');
-  }
+  let hours = 18, mins = 0;
+  try {
+      let tStr = timeStr.toUpperCase().trim();
+      if (tStr.includes('PM') || tStr.includes('AM')) {
+        let [time, modifier] = tStr.split(' ');
+        let [h, m] = time.split(':');
+        hours = parseInt(h); mins = parseInt(m);
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+      } else {
+        let [h, m] = tStr.split(':');
+        hours = parseInt(h); mins = parseInt(m);
+      }
+  } catch(e) { hours = 18; mins = 0; }
+  target.setHours(hours, mins, 0, 0);
+  return target;
 }
 
-// =====================================================
-// LIVE CLOCK & TIMER
-// =====================================================
-function initLiveClock() {
-  setInterval(() => {
-    const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-    document.getElementById('live-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
-    document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', weekday: 'long'});
-
-    const isAfter6 = now.getHours() >= 18;
-    if (isAfter6 && !wasAfter6) {
-      wasAfter6 = true;
-      updateUIForTime();
-    }
-  }, 1000);
+function formatTimeFriendly(timeStr) {
+  if(!timeStr) return "6:00 PM";
+  let upper = timeStr.toUpperCase();
+  if(upper.includes('AM') || upper.includes('PM')) return timeStr;
+  let [h, m] = timeStr.split(':');
+  let hours = parseInt(h);
+  let ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; 
+  return `${hours}:${m} ${ampm}`;
 }
 
 // =====================================================
@@ -438,7 +408,6 @@ function agentLogout(){
 // INIT
 // =====================================================
 function initAgentApp() {
-  initLiveClock();
   loadSettings();
   loadResultsAndToday();
   loadMyBets();
@@ -455,6 +424,76 @@ function showPage(page) {
 }
 
 // =====================================================
+// LIVE CLOCK & HIDING LOGIC
+// =====================================================
+function updateClock() {
+  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+  document.getElementById('live-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
+  document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', weekday: 'long'});
+
+  let target = new Date(now);
+  target.setHours(18, 0, 0, 0); // Default 6 PM
+  let displayTimeStr = "6:00 PM";
+
+  if (todayResultData && todayResultData.time) {
+    target = parseTimeStr(todayResultData.time);
+    displayTimeStr = formatTimeFriendly(todayResultData.time);
+  }
+
+  const isOpened = now >= target;
+
+  if (todayResultData && isOpened) {
+    document.getElementById('home-num').textContent = String(todayResultData.number).padStart(2, '0');
+    document.getElementById('home-word').textContent = getWord(todayResultData.number);
+    document.getElementById('home-time').textContent = 'Opened at: ' + displayTimeStr;
+    document.getElementById('home-time').style.color = '#68d391';
+  } else if (todayResultData && !isOpened) {
+    let diff = target - now;
+    const h = String(Math.floor((diff / 3600000) % 24)).padStart(2, '0');
+    const m = String(Math.floor((diff / 60000) % 60)).padStart(2, '0');
+    const s = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+    
+    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
+    document.getElementById('home-word').textContent = 'Result is ready! Waiting for open time...';
+    document.getElementById('home-time').textContent = `Opens in: ${h}h ${m}m ${s}s (${displayTimeStr})`;
+    document.getElementById('home-time').style.color = '#d4af37';
+  } else {
+    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
+    document.getElementById('home-word').textContent = 'Waiting for result...';
+    document.getElementById('home-time').textContent = 'Scheduled for: ' + displayTimeStr;
+    document.getElementById('home-time').style.color = '#fff';
+  }
+
+  // History Filter
+  const today = getTodayDateStr();
+  const visibleResults = allResults.filter(r => {
+    if (r.date === today) {
+        const rTarget = parseTimeStr(r.time);
+        if (now < rTarget) return false; 
+    }
+    return true;
+  });
+  
+  const tbody = document.getElementById('results-body');
+  if(!visibleResults.length){
+    document.getElementById('results-table').style.display='none';
+    document.getElementById('results-empty').style.display='flex';
+  } else {
+    document.getElementById('results-table').style.display='table';
+    document.getElementById('results-empty').style.display='none';
+    tbody.innerHTML = visibleResults.map(r=>`
+      <tr>
+        <td>${r.date||'--'}</td>
+        <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
+        <td>${r.numberWord||getWord(r.number)}</td>
+        <td>${formatTimeFriendly(r.time)}</td>
+      </tr>
+    `).join('');
+  }
+}
+setInterval(updateClock, 1000);
+
+// =====================================================
 // REALTIME DATA LOADERS
 // =====================================================
 function loadResultsAndToday() {
@@ -462,8 +501,6 @@ function loadResultsAndToday() {
     .onSnapshot(snap=>{
       allResults = snap.docs.map(d=>({id:d.id,...d.data()}));
       todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
-      document.getElementById('results-loading').style.display='none';
-      updateUIForTime();
     });
 }
 
@@ -476,9 +513,8 @@ function loadSettings() {
 function getCommissionRate() { return settings.commissionRate || 10; }
 
 // =====================================================
-// BET SYSTEM (SUPPORT FOR DIFFERENT AMOUNTS & CUSTOMER NAME)
+// BET SYSTEM 
 // =====================================================
-
 function processBetEntries(type, inputStr, defaultAmount) {
   if(!inputStr) return showToast(`Please enter ${type}(s)`, 'error');
   
@@ -494,7 +530,6 @@ function processBetEntries(type, inputStr, defaultAmount) {
      let parsedVal = val;
      let itemAmount = defaultAmount;
 
-     // Check if user entered format like "15=50"
      if(val.includes('=')) {
         let parts = val.split('=');
         parsedVal = parts[0].trim();
@@ -511,7 +546,6 @@ function processBetEntries(type, inputStr, defaultAmount) {
      const commission = parseFloat((itemAmount * (rate/100)).toFixed(2));
      const userAmount = parseFloat((itemAmount * ((100-rate)/100)).toFixed(2));
      
-     // 1 ka 100 for number (User gets 90x), 1 ka 10 for harup (User gets 9x)
      let userWin = 0;
 
      if(type === 'number') {
@@ -520,7 +554,7 @@ function processBetEntries(type, inputStr, defaultAmount) {
            showToast(`Skipped invalid number: ${parsedVal}`, 'error');
            return;
         }
-        userWin = itemAmount * 90; // User potential win
+        userWin = itemAmount * 90;
         betCart.push({ type: 'number', num: num, harup: '', amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      } else if (type === 'harup') {
@@ -529,7 +563,7 @@ function processBetEntries(type, inputStr, defaultAmount) {
            showToast(`Skipped invalid harup: ${parsedVal}`, 'error');
            return;
         }
-        userWin = itemAmount * 9; // User potential win
+        userWin = itemAmount * 9;
         betCart.push({ type: 'harup', num: '', harup: h, amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      }
@@ -543,14 +577,12 @@ function processBetEntries(type, inputStr, defaultAmount) {
   }
 }
 
-// 1. ADD NUMBER
 function addNumberBet() {
   const str = document.getElementById('bet-num-input').value;
   const amt = document.getElementById('bet-num-amount').value;
   processBetEntries('number', str, amt);
 }
 
-// 2. ADD HARUP
 function addHarupBet() {
   const str = document.getElementById('bet-harup-input').value;
   const amt = document.getElementById('bet-harup-amount').value;
@@ -627,7 +659,7 @@ async function submitAllBets() {
     });
     await batch.commit();
     betCart=[];
-    document.getElementById('bet-customer').value = ''; // Reset Customer Name
+    document.getElementById('bet-customer').value = ''; 
     renderBetCart();
     showToast('All bets submitted!','success');
     showPage('my-bets');
@@ -637,7 +669,7 @@ async function submitAllBets() {
 }
 
 // =====================================================
-// MY BETS & SEARCH FILTERING
+// MY BETS
 // =====================================================
 function loadMyBets() {
   if(!currentAgent) return;
@@ -645,7 +677,7 @@ function loadMyBets() {
   db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(500)
     .onSnapshot(snap=>{
       myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderMyBets(myBets); // Render initially with all data
+      renderMyBets(myBets); 
       
       const todayBets=myBets.filter(b=>b.date===today);
       document.getElementById('my-bets-count').textContent=todayBets.length;
@@ -656,7 +688,6 @@ function loadMyBets() {
     });
 }
 
-// Live Search Function
 function filterMyBets() {
   const query = document.getElementById('search-bets').value.toLowerCase();
   const filtered = myBets.filter(b => {

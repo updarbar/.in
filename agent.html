@@ -10,21 +10,20 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
-  .bet-box { background: var(--bg-secondary, #1a1a1a); border: 1px dashed var(--border, #333); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-  .live-header { background: #111; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-  .live-clock-time { font-size: 16px; color: #d4af37; font-family: 'Orbitron', monospace; letter-spacing: 1px;}
-  .live-clock-date { font-size: 12px; color: #aaa; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
-  .small-text { font-size: 11px; color: #888; margin-bottom: 8px; display: block; }
-  .search-bar { width: 100%; padding: 10px 15px; background: #222; border: 1px solid #444; color: #fff; border-radius: 6px; margin-bottom: 15px; font-size: 14px; }
-  .search-bar:focus { outline: none; border-color: var(--gold); }
-  .win-badge { background: rgba(104, 211, 145, 0.2); color: #68d391; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+  .bet-box{background:var(--bg-secondary,#1a1a1a);border:1px dashed var(--border,#333);padding:15px;border-radius:8px;margin-bottom:15px;}
+  .live-header{background:#111;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;}
+  .live-clock-time{font-size:16px;color:#d4af37;font-family:'Orbitron',monospace;letter-spacing:1px;}
+  .live-clock-date{font-size:12px;color:#aaa;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;}
+  .small-text{font-size:11px;color:#888;margin-bottom:8px;display:block;}
+  .win-badge{background:rgba(104,211,145,0.2);color:#68d391;font-size:11px;padding:2px 6px;border-radius:4px;margin-left:5px;}
 </style>
 </head>
 <body>
 
+<!-- ============ LOGIN ============ -->
 <div id="login-page" class="login-page">
   <div class="login-box">
-    <div class="login-logo" style="color: var(--gold); font-size: 28px; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px;">UP Darbar</div>
+    <div class="login-logo" style="color:var(--gold);font-size:28px;font-weight:800;margin-bottom:10px;text-transform:uppercase;letter-spacing:2px;">UP Darbar</div>
     <h2 class="login-title">Agent Login</h2>
     <p class="login-subtitle">Enter your credentials to access the betting panel</p>
     <div id="login-error" class="alert alert-error" style="display:none;text-align:left;"></div>
@@ -41,12 +40,13 @@
   </div>
 </div>
 
+<!-- ============ AGENT APP ============ -->
 <div id="agent-app" style="display:none;">
 
 <nav class="navbar">
   <div style="display:flex;align-items:center;gap:12px;">
     <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-    <div class="nav-brand">UP Darbar <span id="nav-agent-name" style="color:#fff; font-size: 14px; font-weight:normal; margin-left:8px;"></span></div>
+    <div class="nav-brand">UP Darbar <span id="nav-agent-name" style="color:#fff;font-size:14px;font-weight:normal;margin-left:8px;"></span></div>
   </div>
   <div class="nav-links">
     <a href="index.html" class="nav-btn outline">Home</a>
@@ -61,92 +61,66 @@
 
 <div class="app-layout">
 
+<!-- SIDEBAR -->
 <div class="sidebar" id="sidebar">
   <div class="sidebar-section">
     <div class="sidebar-label">Main Menu</div>
-    <button class="sidebar-link active" onclick="showPage('home')" id="nav-home">
-      <span class="sidebar-icon">🏠</span> Home
-    </button>
-    <button class="sidebar-link" onclick="showPage('place-bet')" id="nav-place-bet">
-      <span class="sidebar-icon">🎲</span> Place Bet
-    </button>
-    <button class="sidebar-link" onclick="showPage('my-bets')" id="nav-my-bets">
-      <span class="sidebar-icon">📋</span> My Bets
-    </button>
-    <button class="sidebar-link" onclick="showPage('results')" id="nav-results">
-      <span class="sidebar-icon">📅</span> Results
-    </button>
-    <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis">
-      <span class="sidebar-icon">🧮</span> Analysis Tool
-    </button>
-    <button class="sidebar-link" onclick="showPage('settings')" id="nav-settings">
-      <span class="sidebar-icon">⚙️</span> Settings
-    </button>
+    <button class="sidebar-link active" onclick="showPage('home')" id="nav-home"><span class="sidebar-icon">🏠</span> Home</button>
+    <button class="sidebar-link" onclick="showPage('place-bet')" id="nav-place-bet"><span class="sidebar-icon">🎲</span> Place Bet</button>
+    <button class="sidebar-link" onclick="showPage('my-bets')" id="nav-my-bets"><span class="sidebar-icon">📋</span> My Bets</button>
+    <button class="sidebar-link" onclick="showPage('results')" id="nav-results"><span class="sidebar-icon">📅</span> Results</button>
+    <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis"><span class="sidebar-icon">🧮</span> Analysis Tool</button>
+    <button class="sidebar-link" onclick="showPage('settings')" id="nav-settings"><span class="sidebar-icon">⚙️</span> Settings</button>
   </div>
 </div>
 
+<!-- PAGE CONTENT -->
 <div class="page-content" id="page-content">
 
+<!-- ========== HOME ========== -->
 <div id="page-home">
-  <div class="section-header">
-    <h2 class="section-title">🏠 Agent Dashboard</h2>
-  </div>
-
+  <div class="section-header"><h2 class="section-title">🏠 Agent Dashboard</h2></div>
   <div class="hero-number card-gold" style="margin-bottom:20px;">
     <div class="hero-label"><span class="live-dot"></span>TODAY'S OPEN NUMBER</div>
     <div id="home-num" class="hero-num font-orbitron">--</div>
     <div id="home-word" class="hero-word">Waiting for result...</div>
-    <div id="home-time" class="hero-time" style="margin-top:10px; font-weight:bold; color:#fff;">Open Time: 6:00 PM</div>
+    <div id="home-time" class="hero-time" style="margin-top:10px;font-weight:bold;color:#fff;">Open Time: 6:00 PM</div>
   </div>
-
   <div class="grid-3" style="margin-bottom:20px;">
-    <div class="stat-card">
-      <div class="stat-icon">🎲</div>
-      <div class="stat-value" id="my-bets-count">0</div>
-      <div class="stat-label">My Bets Today</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">💰</div>
-      <div class="stat-value" id="my-amount" style="font-size:18px;">₹0</div>
-      <div class="stat-label">Total Bet Amount</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon">💸</div>
-      <div class="stat-value" id="my-commission" style="font-size:18px;color:#68d391;">₹0</div>
-      <div class="stat-label">My Play Commission</div>
-    </div>
+    <div class="stat-card"><div class="stat-icon">🎲</div><div class="stat-value" id="my-bets-count">0</div><div class="stat-label">My Bets Today</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="my-amount" style="font-size:18px;">₹0</div><div class="stat-label">Total Bet Amount</div></div>
+    <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="my-commission" style="font-size:18px;color:#68d391;">₹0</div><div class="stat-label">My Commission Earned</div></div>
   </div>
-
   <div class="card">
     <div class="card-title">Quick Actions</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-gold" onclick="showPage('place-bet')">🎲 Place Bet</button>
       <button class="btn btn-blue" onclick="showPage('my-bets')">📋 My Bets</button>
+      <button class="btn btn-green" onclick="showPage('results')">📅 Results</button>
       <button class="btn btn-gray" onclick="showPage('settings')">⚙️ Change Password</button>
     </div>
   </div>
 </div>
 
+<!-- ========== PLACE BET ========== -->
 <div id="page-place-bet" style="display:none;">
-  <div class="section-header">
-    <h2 class="section-title">🎲 Place Bet</h2>
-  </div>
-
+  <div class="section-header"><h2 class="section-title">🎲 Place Bet</h2></div>
   <div class="grid-2">
     <div class="card card-gold">
       <div class="card-title">Add Bet Entry</div>
-      
-      <div class="form-group" style="margin-bottom: 15px;">
-        <label class="form-label">Customer Name (Optional but Recommended)</label>
+
+      <div class="form-group" style="margin-bottom:15px;">
+        <label class="form-label">Customer Name (Optional)</label>
         <input type="text" id="bet-customer" class="form-input" placeholder="e.g. Rahul Kumar"/>
       </div>
-      
+
+      <!-- Number Bet -->
       <div class="bet-box">
-        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">1. Place Number Bet (1 ka 90)</div>
-        <span class="small-text">For same amount: 10, 25, 45 | For different amounts: 10=50, 25=100</span>
+        <div class="card-title" style="font-size:14px;margin-bottom:5px;color:#fff;">1. Number Bet (1 ka 90)</div>
+        <span class="small-text">Same amount: 10, 25, 45 | Different: 10=50, 25=100</span>
         <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
           <div>
-            <label class="form-label">Number(s) (0-99)</label>
+            <label class="form-label">Number(s) 0-99</label>
             <input type="text" id="bet-num-input" class="form-input" placeholder="e.g. 10=50, 25=100"/>
           </div>
           <div>
@@ -154,17 +128,18 @@
             <input type="number" id="bet-num-amount" class="form-input" min="1" placeholder="Default"/>
           </div>
           <div>
-            <button class="btn btn-gold" onclick="addNumberBet()">+ Add</button>
+            <button class="btn btn-gold" onclick="addNumberBet()" style="margin-top:20px;">+ Add</button>
           </div>
         </div>
       </div>
 
+      <!-- Harup Bet -->
       <div class="bet-box">
-        <div class="card-title" style="font-size:14px; margin-bottom:5px; color: #fff;">2. Place Harup Bet (1 ka 9)</div>
-        <span class="small-text">For same amount: 1, 5, 9 | For different amounts: 1=50, 4=100</span>
+        <div class="card-title" style="font-size:14px;margin-bottom:5px;color:#fff;">2. Harup Bet (1 ka 9)</div>
+        <span class="small-text">Same amount: 1, 5, 9 | Different: 1=50, 4=100</span>
         <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
           <div>
-            <label class="form-label">Harup(s) (0-9)</label>
+            <label class="form-label">Harup(s) 0-9</label>
             <input type="text" id="bet-harup-input" class="form-input" placeholder="e.g. 1=50, 4=100"/>
           </div>
           <div>
@@ -172,19 +147,20 @@
             <input type="number" id="bet-harup-amount" class="form-input" min="1" placeholder="Default"/>
           </div>
           <div>
-            <button class="btn btn-blue" onclick="addHarupBet()">+ Add</button>
+            <button class="btn btn-blue" onclick="addHarupBet()" style="margin-top:20px;">+ Add</button>
           </div>
         </div>
       </div>
 
-      <button class="btn btn-gold btn-full btn-lg" onclick="submitAllBets()" id="submit-bets-btn" disabled style="margin-top:20px;">
+      <button class="btn btn-gold btn-full btn-lg" onclick="submitAllBets()" id="submit-bets-btn" disabled style="margin-top:10px;">
         ✅ Submit All Bets
       </button>
     </div>
 
+    <!-- Summary -->
     <div>
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-title">Bet Summary</div>
+      <div class="card">
+        <div class="card-title">Bet Cart Summary</div>
         <div id="bet-cart-empty" class="empty-state" style="padding:30px 10px;">
           <div class="empty-state-icon">🎲</div>
           <div class="empty-state-text">No bets added yet</div>
@@ -193,36 +169,35 @@
         <div id="bet-cart-totals" style="display:none;margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
           <div class="bet-summary-row"><span>Total Bets</span><span class="amount-gold" id="cart-count">0</span></div>
           <div class="bet-summary-row"><span>Total Play Amount</span><span class="amount-gold" id="cart-total">₹0</span></div>
+          <div class="bet-summary-row"><span>Your Commission (10%)</span><span class="amount-green" id="cart-commission">₹0</span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ========== MY BETS ========== -->
 <div id="page-my-bets" style="display:none;">
-  <div class="section-header">
-    <h2 class="section-title">📋 My Bets & Search</h2>
-  </div>
-  <div class="card" style="padding:0;overflow:hidden; padding:15px;">
-    <input type="text" id="search-bets" class="search-bar" placeholder="🔍 Search by Customer Name, Number or Harup..." oninput="filterMyBets()"/>
-
+  <div class="section-header"><h2 class="section-title">📋 My Bets & Search</h2></div>
+  <div class="card" style="padding:15px;">
+    <input type="text" id="search-bets" class="form-input" placeholder="🔍 Search by Customer Name, Number or Harup..." oninput="filterMyBets()" style="margin-bottom:15px;"/>
     <div id="mybets-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <div style="overflow-x:auto;">
-      <table class="history-table" id="mybets-table" style="display:none; width: 100%;">
-        <thead><tr><th>Customer</th><th>Bet On</th><th>Play Amt</th><th>Win (If Pass)</th><th>Time</th></tr></thead>
+      <table class="history-table" id="mybets-table" style="display:none;width:100%;">
+        <thead><tr><th>Customer</th><th>Bet On</th><th>Play Amt</th><th>Win (If Pass)</th><th>Date & Time</th></tr></thead>
         <tbody id="mybets-body"></tbody>
       </table>
-      <div id="mybets-empty" class="empty-state" style="display:none;">
+      <div id="mybets-empty" class="empty-state" style="display:none;padding:40px;">
+        <div class="empty-state-icon">📋</div>
         <div class="empty-state-text">No bets found matching search.</div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ========== RESULTS ========== -->
 <div id="page-results" style="display:none;">
-  <div class="section-header">
-    <h2 class="section-title">📅 Results History</h2>
-  </div>
+  <div class="section-header"><h2 class="section-title">📅 Results History</h2></div>
   <div class="card" style="padding:0;overflow:hidden;">
     <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <table class="history-table" id="results-table" style="display:none;">
@@ -236,10 +211,9 @@
   </div>
 </div>
 
+<!-- ========== ANALYSIS TOOL ========== -->
 <div id="page-analysis" style="display:none;">
-  <div class="section-header">
-    <h2 class="section-title">🧮 Number Analysis Tool</h2>
-  </div>
+  <div class="section-header"><h2 class="section-title">🧮 Number Analysis Tool</h2></div>
   <div class="analysis-tool">
     <div class="analysis-header">📋 Notepad Calculator</div>
     <div class="analysis-body">
@@ -253,19 +227,17 @@
       </div>
       <div class="analysis-results" id="analysis-results">
         <div class="empty-state" style="padding:30px 10px;">
-          <div class="empty-state-icon">🔢</div>
-          <div class="empty-state-text">Enter numbers to analyze</div>
+          <div class="empty-state-icon">🔢</div><div class="empty-state-text">Enter numbers to analyze</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ========== SETTINGS ========== -->
 <div id="page-settings" style="display:none;">
-  <div class="section-header">
-    <h2 class="section-title">⚙️ Agent Settings</h2>
-  </div>
-  <div class="card" style="max-width: 400px;">
+  <div class="section-header"><h2 class="section-title">⚙️ Agent Settings</h2></div>
+  <div class="card" style="max-width:400px;">
     <div class="card-title">Change Password</div>
     <div class="form-group">
       <label class="form-label">New Password</label>
@@ -275,15 +247,19 @@
       <label class="form-label">Confirm New Password</label>
       <input type="password" id="setting-confirm-password" class="form-input" placeholder="Confirm new password"/>
     </div>
-    <button class="btn btn-gold btn-full" onclick="changeAgentPassword()" id="change-pass-btn" style="margin-top: 10px;">Update Password</button>
+    <button class="btn btn-gold btn-full" onclick="changeAgentPassword()" id="change-pass-btn" style="margin-top:10px;">🔑 Update Password</button>
   </div>
 </div>
 
-</div></div></div><div id="toast-container" class="toast-container"></div>
+</div><!-- end page-content -->
+</div><!-- end app-layout -->
+</div><!-- end agent-app -->
+
+<div id="toast-container" class="toast-container"></div>
 
 <script>
 // =====================================================
-// FIREBASE INIT
+// FIREBASE
 // =====================================================
 const firebaseConfig = {
   apiKey:"AIzaSyBklYTB9FOP13g-jKSUR7OSaRT4RLazw_Y",
@@ -301,105 +277,81 @@ const db = firebase.firestore();
 // =====================================================
 const NUM_WORDS={0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',19:'Unnis',20:'Bees',21:'Ikkis',22:'Bais',23:'Teis',24:'Chaubis',25:'Pachis',26:'Chhabis',27:'Sattais',28:'Atthais',29:'Untis',30:'Tees',31:'Ikatees',32:'Battees',33:'Tentees',34:'Chautees',35:'Paintees',36:'Chhattees',37:'Saintees',38:'Adatees',39:'Untaalis',40:'Chalis',41:'Ikatalis',42:'Byalis',43:'Tentalis',44:'Chavalis',45:'Paintalis',46:'Chhiyalis',47:'Saintalis',48:'Adtalis',49:'Unnchas',50:'Pachas',51:'Ikkyavan',52:'Bavan',53:'Tirpan',54:'Chauvan',55:'Pachpan',56:'Chhappan',57:'Sattavan',58:'Athavan',59:'Unsath',60:'Saath',61:'Iksath',62:'Basath',63:'Tirsath',64:'Chausath',65:'Painsath',66:'Chhiyasath',67:'Sarsath',68:'Adsath',69:'Unhattar',70:'Sattar',71:'Ikahattar',72:'Bahattar',73:'Tihattar',74:'Chauhattar',75:'Pachhattar',76:'Chhihattar',77:'Sathattar',78:'Athhattar',79:'Unasi',80:'Assi',81:'Ikyasi',82:'Bayasi',83:'Tirasi',84:'Chaurasi',85:'Pachasi',86:'Chhiyasi',87:'Satasi',88:'Athasi',89:'Nabbay',90:'Nabbe',91:'Ikyanabbe',92:'Banabbe',93:'Tiranabbe',94:'Chaunabbe',95:'Pachanabbe',96:'Chhiyanabbe',97:'Satanabbe',98:'Athanabbe',99:'Ninyanabbe'};
 function getWord(n){return NUM_WORDS[parseInt(n)]||n.toString();}
-
-function getTodayDateStr(){
-  const d = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-}
-function getTimeStr(){
-  return new Date().toLocaleTimeString('en-IN',{timeZone: 'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:true});
-}
+function getNowIST(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));}
+function getTodayDateStr(){const d=getNowIST();return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;}
+function getTimeStr(){return getNowIST().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+function formatINR(a){return '₹'+Number(a||0).toLocaleString('en-IN');}
 function showToast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
-function formatINR(a){return '₹'+Number(a).toLocaleString('en-IN');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-page').style.display!=='none')agentLogin();});
+
+function parseTimeStr(timeStr){
+  const base=getNowIST();
+  if(!timeStr){base.setHours(18,0,0,0);return base;}
+  try{
+    let t=timeStr.toUpperCase().trim();
+    let hours=18,mins=0;
+    if(t.includes('PM')||t.includes('AM')){
+      const[tp,mod]=t.split(' ');const[h,m]=tp.split(':');
+      hours=parseInt(h);mins=parseInt(m||0);
+      if(mod==='PM'&&hours<12)hours+=12;
+      if(mod==='AM'&&hours===12)hours=0;
+    }else{const[h,m]=t.split(':');hours=parseInt(h);mins=parseInt(m||0);}
+    base.setHours(hours,mins,0,0);
+  }catch(e){base.setHours(18,0,0,0);}
+  return base;
+}
+function formatTimeFriendly(t){
+  if(!t)return"6:00 PM";const up=t.toUpperCase();
+  if(up.includes('AM')||up.includes('PM'))return t;
+  const[h,m]=t.split(':');let hours=parseInt(h);
+  const ampm=hours>=12?'PM':'AM';hours=hours%12||12;
+  return`${hours}:${m} ${ampm}`;
+}
 
 // =====================================================
 // STATE
 // =====================================================
-let currentAgent = null;
-let settings = {commissionRate: 10};
-let betCart = [];
-let myBets = [];
-let allResults = [];
-let todayResultData = null;
+let currentAgent=null, settings={commissionRate:10}, betCart=[], myBets=[], allResults=[], todayResultData=null;
+let clockInterval=null;
 
 // =====================================================
-// PARSER (ADMIN SET TIME)
+// LOGIN
 // =====================================================
-function parseTimeStr(timeStr) {
-  const target = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  if (!timeStr) { target.setHours(18, 0, 0, 0); return target; }
-  
-  let hours = 18, mins = 0;
-  try {
-      let tStr = timeStr.toUpperCase().trim();
-      if (tStr.includes('PM') || tStr.includes('AM')) {
-        let [time, modifier] = tStr.split(' ');
-        let [h, m] = time.split(':');
-        hours = parseInt(h); mins = parseInt(m);
-        if (modifier === 'PM' && hours < 12) hours += 12;
-        if (modifier === 'AM' && hours === 12) hours = 0;
-      } else {
-        let [h, m] = tStr.split(':');
-        hours = parseInt(h); mins = parseInt(m);
-      }
-  } catch(e) { hours = 18; mins = 0; }
-  target.setHours(hours, mins, 0, 0);
-  return target;
-}
-
-function formatTimeFriendly(timeStr) {
-  if(!timeStr) return "6:00 PM";
-  let upper = timeStr.toUpperCase();
-  if(upper.includes('AM') || upper.includes('PM')) return timeStr;
-  let [h, m] = timeStr.split(':');
-  let hours = parseInt(h);
-  let ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; 
-  return `${hours}:${m} ${ampm}`;
-}
-
-// =====================================================
-// AGENT LOGIN
-// =====================================================
-async function agentLogin() {
-  const mobile = document.getElementById('login-mobile').value.trim();
-  const password = document.getElementById('login-password').value.trim();
-  const errEl = document.getElementById('login-error');
+async function agentLogin(){
+  const mobile=document.getElementById('login-mobile').value.trim();
+  const password=document.getElementById('login-password').value.trim();
+  const errEl=document.getElementById('login-error');
   errEl.style.display='none';
-
   if(!mobile||!password){errEl.style.display='block';errEl.textContent='Please enter mobile and password.';return;}
-
   document.getElementById('login-btn').disabled=true;
   document.getElementById('login-btn').textContent='Verifying...';
-
-  try {
-    const snap = await db.collection('agents').where('mobile','==',mobile).where('password','==',password).get();
+  try{
+    const snap=await db.collection('agents').where('mobile','==',mobile).where('password','==',password).get();
     if(!snap.empty){
-      const agent = snap.docs[0].data();
+      const agent=snap.docs[0].data();
       if(agent.status==='blocked'){
-        errEl.style.display='block';errEl.textContent='Your account is blocked. Contact admin.';
+        errEl.style.display='block';errEl.textContent='Account blocked. Contact admin.';
         document.getElementById('login-btn').disabled=false;
         document.getElementById('login-btn').textContent='LOGIN';
         return;
       }
-      currentAgent = {id:snap.docs[0].id,...agent};
-      document.getElementById('nav-agent-name').textContent = ' | ' + (currentAgent.name||'');
+      currentAgent={id:snap.docs[0].id,...agent};
+      document.getElementById('nav-agent-name').textContent=' | '+(currentAgent.name||'');
       document.getElementById('login-page').style.display='none';
       document.getElementById('agent-app').style.display='block';
       initAgentApp();
     } else {
       errEl.style.display='block';errEl.textContent='Invalid credentials.';
     }
-  } catch(e){errEl.style.display='block';errEl.textContent='Error: '+e.message;}
-
+  }catch(e){errEl.style.display='block';errEl.textContent='Error: '+e.message;}
   document.getElementById('login-btn').disabled=false;
   document.getElementById('login-btn').textContent='LOGIN';
 }
 
 function agentLogout(){
-  currentAgent=null;betCart=[];myBets=[];
+  currentAgent=null;betCart=[];myBets=[];allResults=[];todayResultData=null;
+  if(clockInterval){clearInterval(clockInterval);clockInterval=null;}
   document.getElementById('login-page').style.display='flex';
   document.getElementById('agent-app').style.display='none';
   document.getElementById('login-mobile').value='';
@@ -409,15 +361,15 @@ function agentLogout(){
 // =====================================================
 // INIT
 // =====================================================
-function initAgentApp() {
+function initAgentApp(){
   loadSettings();
   loadResultsAndToday();
   loadMyBets();
-  initLiveClock();
+  startLiveClock();
   showPage('home');
 }
 
-function showPage(page) {
+function showPage(page){
   document.querySelectorAll('.page-content > div').forEach(p=>p.style.display='none');
   document.getElementById('page-'+page).style.display='block';
   document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
@@ -427,203 +379,167 @@ function showPage(page) {
 }
 
 // =====================================================
-// LIVE CLOCK & HIDING LOGIC (DYNAMIC TIME)
+// LIVE CLOCK (IST) — FIXED: was never defined before
 // =====================================================
-function updateClock() {
-  const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  document.getElementById('live-time').textContent = now.toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true});
-  document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric', weekday: 'long'});
+function startLiveClock(){
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval=setInterval(updateClock,1000);
+  updateClock();
+}
 
-  let target = new Date(now);
-  target.setHours(18, 0, 0, 0); // Default 6 PM
-  let displayTimeStr = "6:00 PM";
+function updateClock(){
+  const now=getNowIST();
+  document.getElementById('live-time').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  document.getElementById('live-date').textContent=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',weekday:'long'});
 
-  if (todayResultData && todayResultData.time) {
-    target = parseTimeStr(todayResultData.time);
-    displayTimeStr = formatTimeFriendly(todayResultData.time);
+  let target=getNowIST();target.setHours(18,0,0,0);
+  let displayTimeStr="6:00 PM";
+  if(todayResultData&&todayResultData.time){
+    target=parseTimeStr(todayResultData.time);
+    displayTimeStr=formatTimeFriendly(todayResultData.time);
   }
+  const isOpened=now>=target;
 
-  const isOpened = now >= target;
-
-  if (todayResultData && isOpened) {
-    document.getElementById('home-num').textContent = String(todayResultData.number).padStart(2, '0');
-    document.getElementById('home-word').textContent = getWord(todayResultData.number);
-    document.getElementById('home-time').textContent = 'Opened at: ' + displayTimeStr;
-    document.getElementById('home-time').style.color = '#68d391';
-  } else if (todayResultData && !isOpened) {
-    let diff = target - now;
-    const h = String(Math.floor((diff / 3600000) % 24)).padStart(2, '0');
-    const m = String(Math.floor((diff / 60000) % 60)).padStart(2, '0');
-    const s = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
-    
-    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
-    document.getElementById('home-word').textContent = 'Result is ready! Waiting for open time...';
-    document.getElementById('home-time').textContent = `Opens in: ${h}h ${m}m ${s}s (${displayTimeStr})`;
-    document.getElementById('home-time').style.color = '#d4af37';
+  if(todayResultData&&isOpened){
+    document.getElementById('home-num').textContent=String(todayResultData.number).padStart(2,'0');
+    document.getElementById('home-word').textContent=getWord(todayResultData.number);
+    document.getElementById('home-time').textContent='Opened at: '+displayTimeStr;
+    document.getElementById('home-time').style.color='#68d391';
+  } else if(todayResultData&&!isOpened){
+    const diff=target-now;
+    const h=String(Math.floor((diff/3600000)%24)).padStart(2,'0');
+    const m=String(Math.floor((diff/60000)%60)).padStart(2,'0');
+    const s=String(Math.floor((diff/1000)%60)).padStart(2,'0');
+    document.getElementById('home-num').innerHTML='<span class="no-result">--</span>';
+    document.getElementById('home-word').textContent='Result ready! Opens soon...';
+    document.getElementById('home-time').textContent=`Opens in: ${h}h ${m}m ${s}s  (${displayTimeStr})`;
+    document.getElementById('home-time').style.color='#d4af37';
   } else {
-    document.getElementById('home-num').innerHTML = '<span class="no-result">--</span>';
-    document.getElementById('home-word').textContent = 'Waiting for result...';
-    document.getElementById('home-time').textContent = 'Scheduled for: ' + displayTimeStr;
-    document.getElementById('home-time').style.color = '#fff';
+    document.getElementById('home-num').innerHTML='<span class="no-result">--</span>';
+    document.getElementById('home-word').textContent='Waiting for result...';
+    document.getElementById('home-time').textContent='Scheduled for: '+displayTimeStr;
+    document.getElementById('home-time').style.color='#fff';
   }
 
-  // History Filter
-  const today = getTodayDateStr();
-  const visibleResults = allResults.filter(r => {
-    if (r.date === today) {
-        const rTarget = parseTimeStr(r.time);
-        if (now < rTarget) return false; 
-    }
+  // Results page — hide today if not yet open time
+  const today=getTodayDateStr();
+  const visible=allResults.filter(r=>{
+    if(r.date===today){if(now<parseTimeStr(r.time))return false;}
     return true;
   });
-  
-  const tbody = document.getElementById('results-body');
-  if(!visibleResults.length){
-    document.getElementById('results-table').style.display='none';
-    document.getElementById('results-empty').style.display='flex';
-  } else {
-    document.getElementById('results-table').style.display='table';
-    document.getElementById('results-empty').style.display='none';
-    tbody.innerHTML = visibleResults.map(r=>`
+
+  const rLoad=document.getElementById('results-loading');
+  const rTbl=document.getElementById('results-table');
+  const rEmpty=document.getElementById('results-empty');
+  if(rLoad) rLoad.style.display='none';
+  if(visible.length){
+    if(rTbl) rTbl.style.display='table';
+    if(rEmpty) rEmpty.style.display='none';
+    const tbody=document.getElementById('results-body');
+    if(tbody) tbody.innerHTML=visible.map(r=>`
       <tr>
         <td>${r.date||'--'}</td>
         <td><span class="number-badge">${String(r.number||0).padStart(2,'0')}</span></td>
         <td>${r.numberWord||getWord(r.number)}</td>
         <td>${formatTimeFriendly(r.time)}</td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
+  } else {
+    if(rTbl) rTbl.style.display='none';
+    if(rEmpty) rEmpty.style.display='flex';
   }
 }
 
 // =====================================================
-// REALTIME DATA LOADERS
+// SETTINGS
 // =====================================================
-function loadResultsAndToday() {
-  db.collection('results').orderBy('timestamp','desc').limit(30)
-    .onSnapshot(snap=>{
-      allResults = snap.docs.map(d=>({id:d.id,...d.data()}));
-      todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
-      document.getElementById('results-loading').style.display='none';
-      updateClock(); // force update UI
-    });
-}
-
-function loadSettings() {
+function loadSettings(){
   db.collection('settings').doc('main').onSnapshot(snap=>{
     if(snap.exists) settings=snap.data();
     else settings={commissionRate:10};
   });
 }
-function getCommissionRate() { return settings.commissionRate || 10; }
+function getCommissionRate(){return settings.commissionRate||10;}
 
 // =====================================================
-// BET SYSTEM (SUPPORT FOR DIFFERENT AMOUNTS & CUSTOMER NAME)
+// REALTIME RESULTS
 // =====================================================
+function loadResultsAndToday(){
+  db.collection('results').orderBy('timestamp','desc').limit(30)
+    .onSnapshot(snap=>{
+      allResults=snap.docs.map(d=>({id:d.id,...d.data()}));
+      todayResultData=allResults.find(r=>r.date===getTodayDateStr())||null;
+      updateClock();
+    });
+}
 
-function processBetEntries(type, inputStr, defaultAmount) {
-  if(!inputStr) return showToast(`Please enter ${type}(s)`, 'error');
-  
-  const customerName = document.getElementById('bet-customer').value.trim() || 'Guest';
-  const items = inputStr.split(',').map(s => s.trim()).filter(s => s !== '');
-  
-  if(items.length === 0) return showToast(`Please enter valid ${type}(s)`, 'error');
+// =====================================================
+// BET SYSTEM
+// =====================================================
+function processBetEntries(type, inputStr, defaultAmount){
+  if(!inputStr||!inputStr.trim()) return showToast(`Enter ${type}(s)`,'error');
+  const customerName=document.getElementById('bet-customer').value.trim()||'Guest';
+  const items=inputStr.split(',').map(s=>s.trim()).filter(s=>s!=='');
+  if(!items.length) return showToast(`Enter valid ${type}(s)`,'error');
 
-  let added = 0;
-  const rate = getCommissionRate();
+  let added=0;
+  const rate=getCommissionRate();
 
-  items.forEach(val => {
-     let parsedVal = val;
-     let itemAmount = defaultAmount;
+  items.forEach(val=>{
+    let parsedVal=val, itemAmount=parseFloat(defaultAmount)||0;
+    if(val.includes('=')){
+      const parts=val.split('=');
+      parsedVal=parts[0].trim();
+      itemAmount=parseFloat(parts[1].trim());
+    }
+    if(isNaN(itemAmount)||itemAmount<=0){showToast(`Skipped ${parsedVal}: invalid amount`,'error');return;}
 
-     // Check if user entered format like "15=50"
-     if(val.includes('=')) {
-        let parts = val.split('=');
-        parsedVal = parts[0].trim();
-        itemAmount = parseFloat(parts[1].trim());
-     } else {
-        itemAmount = parseFloat(defaultAmount);
-     }
+    const commission=parseFloat((itemAmount*(rate/100)).toFixed(2));
+    const userAmount=parseFloat((itemAmount*((100-rate)/100)).toFixed(2));
 
-     if(isNaN(itemAmount) || itemAmount <= 0) {
-        showToast(`Skipped ${parsedVal} due to invalid amount`, 'error');
-        return;
-     }
-
-     const commission = parseFloat((itemAmount * (rate/100)).toFixed(2));
-     const userAmount = parseFloat((itemAmount * ((100-rate)/100)).toFixed(2));
-     
-     let userWin = 0;
-
-     if(type === 'number') {
-        const num = parseInt(parsedVal);
-        if(isNaN(num) || num < 0 || num > 99) {
-           showToast(`Skipped invalid number: ${parsedVal}`, 'error');
-           return;
-        }
-        userWin = itemAmount * 90; // User potential win
-        betCart.push({ type: 'number', num: num, harup: '', amount: itemAmount, commission, userAmount, customerName, userWin });
-        added++;
-     } else if (type === 'harup') {
-        const h = parseInt(parsedVal);
-        if(isNaN(h) || h < 0 || h > 9) {
-           showToast(`Skipped invalid harup: ${parsedVal}`, 'error');
-           return;
-        }
-        userWin = itemAmount * 9; // User potential win
-        betCart.push({ type: 'harup', num: '', harup: h, amount: itemAmount, commission, userAmount, customerName, userWin });
-        added++;
-     }
+    if(type==='number'){
+      const num=parseInt(parsedVal);
+      if(isNaN(num)||num<0||num>99){showToast(`Skipped invalid number: ${parsedVal}`,'error');return;}
+      betCart.push({type:'number',num,harup:'',amount:itemAmount,commission,userAmount,customerName,userWin:itemAmount*90});
+      added++;
+    } else if(type==='harup'){
+      const h=parseInt(parsedVal);
+      if(isNaN(h)||h<0||h>9){showToast(`Skipped invalid harup: ${parsedVal}`,'error');return;}
+      betCart.push({type:'harup',num:'',harup:h,amount:itemAmount,commission,userAmount,customerName,userWin:itemAmount*9});
+      added++;
+    }
   });
 
-  if(added > 0) {
+  if(added>0){
     renderBetCart();
-    showToast(`Successfully added ${added} ${type} bet(s)!`, 'success');
-    document.getElementById(`bet-${type}-input`).value = '';
-    document.getElementById(`bet-${type}-amount`).value = '';
+    showToast(`Added ${added} ${type} bet(s)!`,'success');
+    document.getElementById(`bet-${type}-input`).value='';
+    document.getElementById(`bet-${type}-amount`).value='';
   }
 }
 
-function addNumberBet() {
-  const str = document.getElementById('bet-num-input').value;
-  const amt = document.getElementById('bet-num-amount').value;
-  processBetEntries('number', str, amt);
-}
+function addNumberBet(){processBetEntries('number',document.getElementById('bet-num-input').value,document.getElementById('bet-num-amount').value);}
+function addHarupBet(){processBetEntries('harup',document.getElementById('bet-harup-input').value,document.getElementById('bet-harup-amount').value);}
 
-function addHarupBet() {
-  const str = document.getElementById('bet-harup-input').value;
-  const amt = document.getElementById('bet-harup-amount').value;
-  processBetEntries('harup', str, amt);
-}
+function removeBetEntry(idx){betCart.splice(idx,1);renderBetCart();}
 
-function removeBetEntry(idx) {
-  betCart.splice(idx,1);
-  renderBetCart();
-}
-
-function renderBetCart() {
+function renderBetCart(){
   const empty=document.getElementById('bet-cart-empty');
   const list=document.getElementById('bet-cart-list');
   const totals=document.getElementById('bet-cart-totals');
-  const submitBtn=document.getElementById('submit-bets-btn');
+  const btn=document.getElementById('submit-bets-btn');
 
-  if(!betCart.length){
-    empty.style.display='block';list.innerHTML='';totals.style.display='none';submitBtn.disabled=true;
-    return;
-  }
+  if(!betCart.length){empty.style.display='block';list.innerHTML='';totals.style.display='none';btn.disabled=true;return;}
+  empty.style.display='none';totals.style.display='block';btn.disabled=false;
 
-  empty.style.display='none';
-  totals.style.display='block';
-  submitBtn.disabled=false;
-
-  list.innerHTML = betCart.map((b,i)=>`
-    <div class="bet-summary-row" style="align-items:center; flex-wrap: wrap;">
-      <div style="flex: 1; display:flex; align-items:center; gap:8px;">
-        <span style="font-size:12px; color:#aaa;">👤 ${b.customerName}</span>
-        ${b.type === 'number' 
-            ? `<span class="number-badge" style="background:#d4af37;">Num: ${String(b.num).padStart(2,'0')}</span>` 
-            : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
+  list.innerHTML=betCart.map((b,i)=>`
+    <div class="bet-summary-row" style="align-items:center;flex-wrap:wrap;">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#aaa;">👤 ${b.customerName}</span>
+        ${b.type==='number'
+          ?`<span class="number-badge" style="background:#d4af37;">Num: ${String(b.num).padStart(2,'0')}</span>`
+          :`<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
         <span class="amount-gold">${formatINR(b.amount)}</span>
         <span class="win-badge">Win: ${formatINR(b.userWin)}</span>
         <button class="btn btn-red btn-sm" onclick="removeBetEntry(${i})">✕</button>
@@ -631,169 +547,132 @@ function renderBetCart() {
     </div>
   `).join('');
 
-  const totalAmt = betCart.reduce((s,b)=>s+b.amount,0);
-  document.getElementById('cart-count').textContent = betCart.length;
-  document.getElementById('cart-total').textContent = formatINR(totalAmt);
+  const totalAmt=betCart.reduce((s,b)=>s+b.amount,0);
+  const totalComm=betCart.reduce((s,b)=>s+b.commission,0);
+  document.getElementById('cart-count').textContent=betCart.length;
+  document.getElementById('cart-total').textContent=formatINR(totalAmt);
+  document.getElementById('cart-commission').textContent=formatINR(totalComm);
 }
 
-async function submitAllBets() {
+async function submitAllBets(){
   if(!betCart.length){showToast('No bets to submit','error');return;}
   if(!confirm(`Submit ${betCart.length} bet(s)?`)) return;
-
-  const submitBtn=document.getElementById('submit-bets-btn');
-  submitBtn.disabled=true;submitBtn.textContent='Submitting...';
-
-  const today=getTodayDateStr();
-  const time=getTimeStr();
-
-  try {
+  const btn=document.getElementById('submit-bets-btn');
+  btn.disabled=true;btn.textContent='Submitting...';
+  const today=getTodayDateStr(), time=getTimeStr();
+  try{
     const batch=db.batch();
     betCart.forEach(b=>{
       const ref=db.collection('bets').doc();
       batch.set(ref,{
-        agentId:currentAgent.id, agentName:currentAgent.name, agentMobile:currentAgent.mobile,
-        customerName: b.customerName,
-        type: b.type, 
-        number: b.type === 'number' ? b.num : null, 
-        harup: b.type === 'harup' ? b.harup : null, 
-        amount: b.amount,
-        commission:b.commission, 
-        userAmount:b.userAmount,
-        userWin: b.userWin,
-        date:today, time, timestamp:firebase.firestore.FieldValue.serverTimestamp()
+        agentId:currentAgent.id,agentName:currentAgent.name,agentMobile:currentAgent.mobile,
+        customerName:b.customerName,
+        type:b.type,
+        number:b.type==='number'?b.num:null,
+        harup:b.type==='harup'?b.harup:null,
+        amount:b.amount,commission:b.commission,userAmount:b.userAmount,userWin:b.userWin,
+        date:today,time,timestamp:firebase.firestore.FieldValue.serverTimestamp()
       });
     });
     await batch.commit();
     betCart=[];
-    document.getElementById('bet-customer').value = ''; // Reset Customer Name
+    document.getElementById('bet-customer').value='';
     renderBetCart();
     showToast('All bets submitted!','success');
     showPage('my-bets');
-  } catch(e){showToast('Error: '+e.message,'error');}
-
-  submitBtn.disabled=false;submitBtn.textContent='✅ Submit All Bets';
+  }catch(e){showToast('Error: '+e.message,'error');}
+  btn.disabled=false;btn.textContent='✅ Submit All Bets';
 }
 
 // =====================================================
-// MY BETS & SEARCH FILTERING
+// MY BETS
 // =====================================================
-function loadMyBets() {
+function loadMyBets(){
   if(!currentAgent) return;
   const today=getTodayDateStr();
   db.collection('bets').where('agentId','==',currentAgent.id).orderBy('timestamp','desc').limit(500)
     .onSnapshot(snap=>{
       myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
-      renderMyBets(myBets); 
-      
-      const todayBets=myBets.filter(b=>b.date===today);
-      document.getElementById('my-bets-count').textContent=todayBets.length;
-      const totalAmt=todayBets.reduce((s,b)=>s+parseFloat(b.amount||0),0);
-      const totalComm=todayBets.reduce((s,b)=>s+parseFloat(b.commission||0),0);
-      document.getElementById('my-amount').textContent=formatINR(totalAmt);
-      document.getElementById('my-commission').textContent=formatINR(totalComm);
+      renderMyBets(myBets);
+      const tb=myBets.filter(b=>b.date===today);
+      document.getElementById('my-bets-count').textContent=tb.length;
+      document.getElementById('my-amount').textContent=formatINR(tb.reduce((s,b)=>s+parseFloat(b.amount||0),0));
+      document.getElementById('my-commission').textContent=formatINR(tb.reduce((s,b)=>s+parseFloat(b.commission||0),0));
     });
 }
 
-function filterMyBets() {
-  const query = document.getElementById('search-bets').value.toLowerCase();
-  const filtered = myBets.filter(b => {
-    const cust = (b.customerName || '').toLowerCase();
-    const num = (b.number !== null && b.number !== undefined) ? b.number.toString() : '';
-    const h = (b.harup !== null && b.harup !== undefined) ? b.harup.toString() : '';
-    return cust.includes(query) || num.includes(query) || h.includes(query);
+function filterMyBets(){
+  const q=document.getElementById('search-bets').value.toLowerCase();
+  const filtered=myBets.filter(b=>{
+    const cust=(b.customerName||'').toLowerCase();
+    const num=b.number!==null&&b.number!==undefined?b.number.toString():'';
+    const h=b.harup!==null&&b.harup!==undefined?b.harup.toString():'';
+    return cust.includes(q)||num.includes(q)||h.includes(q);
   });
   renderMyBets(filtered);
 }
 
-function renderMyBets(dataToRender) {
+function renderMyBets(data){
   document.getElementById('mybets-loading').style.display='none';
-  const tbody=document.getElementById('mybets-body');
   const tbl=document.getElementById('mybets-table');
   const empty=document.getElementById('mybets-empty');
-
-  if(!dataToRender || !dataToRender.length){
-    tbl.style.display='none';
-    empty.style.display='block';
-    return;
-  }
-
-  empty.style.display='none';
-  tbl.style.display='table';
-  
-  tbody.innerHTML=dataToRender.map(b=>`
+  if(!data||!data.length){tbl.style.display='none';empty.style.display='flex';return;}
+  empty.style.display='none';tbl.style.display='table';
+  document.getElementById('mybets-body').innerHTML=data.map(b=>`
     <tr>
-      <td style="font-size:12px; font-weight:bold; color:var(--gold);">${b.customerName || 'Guest'}</td>
-      <td>
-        ${b.type === 'number' || b.harup === null 
-           ? `<span class="number-badge" style="background:#d4af37;">Num: ${String(b.number||0).padStart(2,'0')}</span>` 
-           : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
-      </td>
+      <td style="font-size:12px;font-weight:bold;color:var(--gold);">${b.customerName||'Guest'}</td>
+      <td>${b.type==='number'||b.harup===null
+        ?`<span class="number-badge" style="background:#d4af37;">Num: ${String(b.number||0).padStart(2,'0')}</span>`
+        :`<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}</td>
       <td class="amount-gold">${formatINR(b.amount||0)}</td>
-      <td><span class="win-badge">${formatINR(b.userWin||(b.type==='number'?b.amount*90:b.amount*9))}</span></td>
-      <td style="font-size:11px; color:#888;">${b.date}<br/>${b.time}</td>
-    </tr>
-  `).join('');
+      <td><span class="win-badge">${formatINR(b.userWin||(b.type==='number'?(b.amount||0)*90:(b.amount||0)*9))}</span></td>
+      <td style="font-size:11px;color:#888;">${b.date||'--'}<br>${b.time||'--'}</td>
+    </tr>`).join('');
 }
 
 // =====================================================
-// AGENT PASSWORD CHANGE
+// CHANGE PASSWORD
 // =====================================================
-async function changeAgentPassword() {
-  const newPass = document.getElementById('setting-new-password').value.trim();
-  const confirmPass = document.getElementById('setting-confirm-password').value.trim();
-
-  if(!newPass || !confirmPass) { return showToast('Please fill in both fields', 'error'); }
-  if(newPass !== confirmPass) { return showToast('Passwords do not match', 'error'); }
-  if(newPass.length < 4) { return showToast('Password must be at least 4 characters long', 'error'); }
-
-  const btn = document.getElementById('change-pass-btn');
-  btn.disabled = true;
-  btn.textContent = 'Updating...';
-
-  try {
-    await db.collection('agents').doc(currentAgent.id).update({
-      password: newPass
-    });
-    currentAgent.password = newPass; 
-    showToast('Password updated successfully!', 'success');
-    document.getElementById('setting-new-password').value = '';
-    document.getElementById('setting-confirm-password').value = '';
-  } catch (error) {
-    showToast('Failed to update password: ' + error.message, 'error');
-  }
-
-  btn.disabled = false;
-  btn.textContent = 'Update Password';
+async function changeAgentPassword(){
+  const np=document.getElementById('setting-new-password').value.trim();
+  const cp=document.getElementById('setting-confirm-password').value.trim();
+  if(!np||!cp) return showToast('Fill both fields','error');
+  if(np!==cp) return showToast('Passwords do not match','error');
+  if(np.length<4) return showToast('Min 4 characters required','error');
+  const btn=document.getElementById('change-pass-btn');
+  btn.disabled=true;btn.textContent='Updating...';
+  try{
+    await db.collection('agents').doc(currentAgent.id).update({password:np});
+    currentAgent.password=np;
+    showToast('Password updated!','success');
+    document.getElementById('setting-new-password').value='';
+    document.getElementById('setting-confirm-password').value='';
+  }catch(e){showToast('Error: '+e.message,'error');}
+  btn.disabled=false;btn.textContent='🔑 Update Password';
 }
 
 // =====================================================
 // ANALYSIS TOOL
 // =====================================================
-function runAnalysis() {
-  const text=document.getElementById('analysis-input').value;
-  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l!=='');
-  const nums=lines.map(l=>parseInt(l)).filter(n=>!isNaN(n)&&n>=0&&n<=99);
+function runAnalysis(){
+  const nums=document.getElementById('analysis-input').value.split('\n').map(l=>parseInt(l.trim())).filter(n=>!isNaN(n)&&n>=0&&n<=99);
   const el=document.getElementById('analysis-results');
-
   if(!nums.length){
     el.innerHTML=`<div class="empty-state" style="padding:30px 10px;"><div class="empty-state-icon">🔢</div><div class="empty-state-text">Enter numbers to analyze</div></div>`;
     return;
   }
-
   const total=nums.reduce((a,b)=>a+b,0);
   const avg=(total/nums.length).toFixed(2);
   const digitFreq={};
   nums.forEach(n=>{const d=n%10;digitFreq[d]=(digitFreq[d]||0)+1;});
-  const topDigit=Object.entries(digitFreq).sort((a,b)=>b[1]-a[1])[0];
-  const lastNum=nums[nums.length-1];
-  const suggested=(lastNum+Math.round(avg)%10)%100;
+  const topDigit=Object.entries(digitFreq).sort((a,b)=>b[1]-a[1])[0][0];
+  const suggested=(nums[nums.length-1]+Math.round(avg)%10)%100;
   const pattern=nums.map(n=>n%10).join(' → ');
-
   el.innerHTML=`
     <div class="result-item"><span class="result-key">Count</span><span class="result-val">${nums.length}</span></div>
     <div class="result-item"><span class="result-key">Total</span><span class="result-val">${total}</span></div>
     <div class="result-item"><span class="result-key">Average</span><span class="result-val">${avg}</span></div>
-    <div class="result-item"><span class="result-key">Top Last Digit</span><span class="result-val">${topDigit[0]}</span></div>
+    <div class="result-item"><span class="result-key">Top Last Digit</span><span class="result-val">${topDigit}</span></div>
     <div class="result-item"><span class="result-key">Suggested</span><span class="result-val" style="color:#68d391;">${String(suggested).padStart(2,'0')}</span></div>
     <hr class="divider"/>
     <div class="form-label" style="margin-bottom:6px;">Last Digit Pattern</div>

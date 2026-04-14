@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,6 +224,7 @@
     <h2 class="section-title">📅 Results History</h2>
   </div>
   <div class="card" style="padding:0;overflow:hidden;">
+    <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <table class="history-table" id="results-table" style="display:none;">
       <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
       <tbody id="results-body"></tbody>
@@ -402,6 +402,8 @@ function agentLogout(){
   currentAgent=null;betCart=[];myBets=[];
   document.getElementById('login-page').style.display='flex';
   document.getElementById('agent-app').style.display='none';
+  document.getElementById('login-mobile').value='';
+  document.getElementById('login-password').value='';
 }
 
 // =====================================================
@@ -411,6 +413,7 @@ function initAgentApp() {
   loadSettings();
   loadResultsAndToday();
   loadMyBets();
+  initLiveClock();
   showPage('home');
 }
 
@@ -424,7 +427,7 @@ function showPage(page) {
 }
 
 // =====================================================
-// LIVE CLOCK & HIDING LOGIC
+// LIVE CLOCK & HIDING LOGIC (DYNAMIC TIME)
 // =====================================================
 function updateClock() {
   const now = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
@@ -491,7 +494,6 @@ function updateClock() {
     `).join('');
   }
 }
-setInterval(updateClock, 1000);
 
 // =====================================================
 // REALTIME DATA LOADERS
@@ -501,6 +503,8 @@ function loadResultsAndToday() {
     .onSnapshot(snap=>{
       allResults = snap.docs.map(d=>({id:d.id,...d.data()}));
       todayResultData = allResults.find(r => r.date === getTodayDateStr()) || null;
+      document.getElementById('results-loading').style.display='none';
+      updateClock(); // force update UI
     });
 }
 
@@ -513,8 +517,9 @@ function loadSettings() {
 function getCommissionRate() { return settings.commissionRate || 10; }
 
 // =====================================================
-// BET SYSTEM 
+// BET SYSTEM (SUPPORT FOR DIFFERENT AMOUNTS & CUSTOMER NAME)
 // =====================================================
+
 function processBetEntries(type, inputStr, defaultAmount) {
   if(!inputStr) return showToast(`Please enter ${type}(s)`, 'error');
   
@@ -530,6 +535,7 @@ function processBetEntries(type, inputStr, defaultAmount) {
      let parsedVal = val;
      let itemAmount = defaultAmount;
 
+     // Check if user entered format like "15=50"
      if(val.includes('=')) {
         let parts = val.split('=');
         parsedVal = parts[0].trim();
@@ -554,7 +560,7 @@ function processBetEntries(type, inputStr, defaultAmount) {
            showToast(`Skipped invalid number: ${parsedVal}`, 'error');
            return;
         }
-        userWin = itemAmount * 90;
+        userWin = itemAmount * 90; // User potential win
         betCart.push({ type: 'number', num: num, harup: '', amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      } else if (type === 'harup') {
@@ -563,7 +569,7 @@ function processBetEntries(type, inputStr, defaultAmount) {
            showToast(`Skipped invalid harup: ${parsedVal}`, 'error');
            return;
         }
-        userWin = itemAmount * 9;
+        userWin = itemAmount * 9; // User potential win
         betCart.push({ type: 'harup', num: '', harup: h, amount: itemAmount, commission, userAmount, customerName, userWin });
         added++;
      }
@@ -659,7 +665,7 @@ async function submitAllBets() {
     });
     await batch.commit();
     betCart=[];
-    document.getElementById('bet-customer').value = ''; 
+    document.getElementById('bet-customer').value = ''; // Reset Customer Name
     renderBetCart();
     showToast('All bets submitted!','success');
     showPage('my-bets');
@@ -669,7 +675,7 @@ async function submitAllBets() {
 }
 
 // =====================================================
-// MY BETS
+// MY BETS & SEARCH FILTERING
 // =====================================================
 function loadMyBets() {
   if(!currentAgent) return;
@@ -723,7 +729,7 @@ function renderMyBets(dataToRender) {
            : `<span class="harup-badge" style="background:#2b6cb0;">Harup: ${b.harup}</span>`}
       </td>
       <td class="amount-gold">${formatINR(b.amount||0)}</td>
-      <td><span class="win-badge">${formatINR(b.userWin||0)}</span></td>
+      <td><span class="win-badge">${formatINR(b.userWin||(b.type==='number'?b.amount*90:b.amount*9))}</span></td>
       <td style="font-size:11px; color:#888;">${b.date}<br/>${b.time}</td>
     </tr>
   `).join('');

@@ -1,50 +1,33 @@
-// UP Darbar Service Worker v1.0
-const CACHE_NAME = 'updarbar-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/agent.html',
-  '/admin.html',
-  '/style.css',
-  '/manifest.json'
-];
+
+// UP Darbar Service Worker v3
+const CACHE = 'updarbar-v3';
+const STATIC = ['/index.html','/agent.html','/admin.html','/style.css','/common.js','/manifest.json'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).catch(err => console.log('Cache failed:', err))
-  );
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC).catch(err => console.warn('Cache partial fail:', err))));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for Firebase requests, cache first for static assets
-  if (e.request.url.includes('firestore.googleapis.com') ||
-      e.request.url.includes('firebase') ||
-      e.request.url.includes('googleapis.com')) {
-    // Always fetch Firebase from network
-    e.respondWith(fetch(e.request).catch(() => new Response('', {status: 503})));
+  const url = e.request.url;
+  // Always fetch Firebase from network — never cache Firebase data
+  if (url.includes('firestore.googleapis.com') || url.includes('firebase') || url.includes('googleapis.com') || url.includes('gstatic.com')) {
+    e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })));
     return;
   }
-
+  // Static assets: cache first, network fallback
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
-      return fetch(e.request).then(response => {
-        if (response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        }
-        return response;
-      }).catch(() => cached || new Response('Offline', {status: 503}));
+      return fetch(e.request).then(res => {
+        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() => cached || new Response('Offline - Please check internet connection', { status: 503 }));
     })
   );
 });

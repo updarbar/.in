@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,129 +13,161 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
-.bet-box{background:var(--bg2);border:1px dashed #444;padding:14px;border-radius:8px;margin-bottom:12px;}
+.bet-box{background:var(--bg-secondary,#1a1a1a);border:1px dashed #444;padding:15px;border-radius:8px;margin-bottom:14px;}
+.live-header{background:#111;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #222;}
+.live-clock-time{font-size:15px;color:#d4af37;font-family:'Orbitron',monospace;letter-spacing:1px;}
+.live-clock-date{font-size:11px;color:#aaa;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;}
 .small-text{font-size:11px;color:#888;margin-bottom:8px;display:block;}
 .win-badge{background:rgba(104,211,145,.2);color:#68d391;font-size:11px;padding:2px 8px;border-radius:4px;}
+.install-bar{display:none;background:linear-gradient(135deg,#1c2130,#111318);border:1px solid rgba(240,180,41,.4);border-radius:10px;padding:12px 16px;margin-bottom:16px;align-items:center;gap:12px;flex-wrap:wrap;}
+.install-bar.show{display:flex;}
+.install-bar h4{font-family:'Rajdhani',sans-serif;font-size:15px;color:#f0b429;margin:0 0 2px;}
+.install-bar p{font-size:11px;color:#9aa0b0;margin:0;}
+.result-split { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+.result-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(240,180,41,0.2); text-align: center; }
+.result-box-title { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.result-box-val { font-family: 'Orbitron', monospace; font-size: 36px; color: #f0b429; font-weight: bold; }
+.profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #f0b429; margin-bottom: 15px; }
 </style>
 </head>
 <body>
 
 <div id="login-page" class="login-page">
   <div class="login-box">
-    <div class="login-logo">UP DARBAR</div>
+    <div class="login-logo" style="color:#f0b429;font-size:26px;font-weight:800;letter-spacing:2px;margin-bottom:8px;">UP DARBAR</div>
     <h2 class="login-title">Agent Login</h2>
-    <p class="login-sub">Enter your credentials</p>
-    <div id="lerr" class="alert alert-e" style="display:none;text-align:left;"></div>
-    <div class="form-group"><label class="form-label">Mobile Number</label><input type="tel" id="lmob" class="form-input" placeholder="9876543210" maxlength="10"/></div>
-    <div class="form-group"><label class="form-label">Password</label><input type="password" id="lpass" class="form-input" placeholder="Password"/></div>
-    <button class="btn btn-gold btn-full btn-lg" onclick="agentLogin()" id="lbtn">LOGIN</button>
-    <p style="margin-top:14px;"><a href="index.html" style="color:var(--text3);font-size:11px;">← Back to Home</a></p>
+    <p class="login-subtitle">Enter your credentials to access the betting panel</p>
+    <div id="login-error" class="alert alert-error" style="display:none;text-align:left;"></div>
+    <div class="form-group"><label class="form-label">Mobile Number</label><input type="tel" id="login-mobile" class="form-input" placeholder="9876543210" maxlength="10"/></div>
+    <div class="form-group"><label class="form-label">Password</label><input type="password" id="login-password" class="form-input" placeholder="Enter password"/></div>
+    <button class="btn btn-gold btn-full btn-lg" onclick="agentLogin()" id="login-btn">LOGIN</button>
+    <p style="margin-top:14px;"><a href="index.html" style="color:#666;font-size:12px;">← Back to Home</a></p>
   </div>
 </div>
 
 <div id="agent-app" style="display:none;">
+
 <nav class="navbar">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span><span></span><span></span></button>
-    <div class="nav-brand">UP DARBAR <span id="nav-aname"></span></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+    <div class="nav-brand">UP Darbar <span id="nav-agent-name" style="color:#fff;font-size:13px;font-weight:normal;"></span></div>
   </div>
   <div class="nav-links">
-    <a href="index.html" class="nbtn nbtn-out">Home</a>
-    <button class="nbtn nbtn-red" onclick="agentLogout()">Logout</button>
+    <a href="index.html" class="nav-btn outline">Home</a>
+    <button class="nav-btn danger" onclick="agentLogout()">Logout</button>
   </div>
 </nav>
-<div class="live-bar"><div id="lb-date" class="live-bar-date">--</div><div id="lb-time" class="live-bar-time">--:--:--</div></div>
+
+<div class="live-header">
+  <div id="live-date" class="live-clock-date">--</div>
+  <div id="live-time" class="live-clock-time">--:--:--</div>
+</div>
+
 <div class="app-layout">
+
 <div class="sidebar" id="sidebar">
   <div class="sidebar-section">
-    <div class="sidebar-label">Menu</div>
-    <button class="slink active" onclick="showPage('home')" id="nav-home"><span class="slink-icon">🏠</span>Home</button>
-    <button class="slink" onclick="showPage('place-bet')" id="nav-place-bet"><span class="slink-icon">🎲</span>Place Bet</button>
-    <button class="slink" onclick="showPage('my-bets')" id="nav-my-bets"><span class="slink-icon">📋</span>My Bets</button>
-    <button class="slink" onclick="showPage('results')" id="nav-results"><span class="slink-icon">📅</span>Results</button>
-    <button class="slink" onclick="showPage('analysis')" id="nav-analysis"><span class="slink-icon">🧮</span>Analysis</button>
-    <button class="slink" onclick="showPage('profile')" id="nav-profile"><span class="slink-icon">👤</span>My Profile</button>
+    <div class="sidebar-label">Main Menu</div>
+    <button class="sidebar-link active" onclick="showPage('home')" id="nav-home"><span class="sidebar-icon">🏠</span> Home</button>
+    <button class="sidebar-link" onclick="showPage('place-bet')" id="nav-place-bet"><span class="sidebar-icon">🎲</span> Place Bet</button>
+    <button class="sidebar-link" onclick="showPage('my-bets')" id="nav-my-bets"><span class="sidebar-icon">📋</span> My Bets</button>
+    <button class="sidebar-link" onclick="showPage('results')" id="nav-results"><span class="sidebar-icon">📅</span> Results</button>
+    <button class="sidebar-link" onclick="showPage('analysis')" id="nav-analysis"><span class="sidebar-icon">🧮</span> Analysis Tool</button>
+    <button class="sidebar-link" onclick="showPage('profile')" id="nav-profile"><span class="sidebar-icon">👤</span> My Profile</button>
+    <button class="sidebar-link" onclick="showPage('settings')" id="nav-settings"><span class="sidebar-icon">⚙️</span> Settings</button>
   </div>
 </div>
+
 <div class="page-content">
 
 <div id="page-home">
   <div class="section-header"><h2 class="section-title">🏠 Dashboard</h2></div>
 
-  <div class="install-banner" id="install-banner">
+  <div class="install-bar" id="install-bar">
     <div style="font-size:30px;">📲</div>
-    <div style="flex:1;"><h3>Install UP Darbar App</h3><p>Mobile par install karein — offline bhi chalega!</p></div>
+    <div style="flex:1;">
+      <h4>Install UP Darbar App</h4>
+      <p>Mobile par install karo — bina browser ke kaam karega!</p>
+    </div>
     <button class="btn btn-gold btn-sm" onclick="installPWA()">⬇ Install</button>
-    <button class="btn btn-gray btn-sm" onclick="document.getElementById('install-banner').classList.remove('show')">✕</button>
+    <button class="btn btn-gray btn-sm" onclick="document.getElementById('install-bar').classList.remove('show')">✕</button>
   </div>
 
-  <div class="hero-number card-g" style="margin-bottom:16px;">
-    <div class="hero-label"><span class="ldot"></span>TODAY'S OPEN NUMBER</div>
-    <div id="h-num" class="hero-num orb">--</div>
-    <div id="h-word" class="hero-word">Waiting for result...</div>
-    <div id="h-time" class="hero-time">Open Time: 6:00 PM</div>
+  <div class="hero-number card-gold" style="margin-bottom:18px;">
+    <div class="hero-label"><span class="live-dot"></span>TODAY'S RESULTS</div>
+    <div class="result-split">
+      <div class="result-box">
+        <div class="result-box-title">Number</div>
+        <div id="home-num" class="result-box-val">--</div>
+        <div id="home-word" style="font-size:12px;color:#fff;margin-top:5px;">Waiting...</div>
+      </div>
+      <div class="result-box" style="border-color: rgba(99, 179, 237, 0.3);">
+        <div class="result-box-title" style="color:#63b3ed;">Harup</div>
+        <div id="home-harup" class="result-box-val" style="color:#63b3ed;">--</div>
+        <div id="home-harup-status" style="font-size:12px;color:#fff;margin-top:5px;">Waiting...</div>
+      </div>
+    </div>
+    <div id="home-time" class="hero-time" style="margin-top:15px;font-weight:bold;color:#fff;">Scheduled: 6:00 PM</div>
   </div>
 
-  <div class="g3" style="margin-bottom:14px;">
-    <div class="stat-card"><div class="stat-icon">🎲</div><div class="stat-value" id="st-bets-today">0</div><div class="stat-label">My Bets Today</div></div>
-    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="st-amt-today" style="font-size:16px;">₹0</div><div class="stat-label">Amount Today</div></div>
-    <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="st-comm-today" style="font-size:16px;color:#68d391;">₹0</div><div class="stat-label">My Commission</div></div>
+  <div class="grid-3" style="margin-bottom:18px;">
+    <div class="stat-card"><div class="stat-icon">🎲</div><div class="stat-value" id="my-bets-count">0</div><div class="stat-label">My Bets Today</div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value" id="my-amount" style="font-size:17px;">₹0</div><div class="stat-label">Total Bet Amount</div></div>
+    <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="my-commission" style="font-size:17px;color:#68d391;">₹0</div><div class="stat-label">My Commission</div></div>
   </div>
 
   <div class="card">
     <div class="card-title">Quick Actions</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-gold" onclick="showPage('place-bet')">🎲 Place Bet</button>
       <button class="btn btn-blue" onclick="showPage('my-bets')">📋 My Bets</button>
       <button class="btn btn-green" onclick="showPage('results')">📅 Results</button>
-      <button class="btn btn-gray" onclick="showPage('profile')">👤 My Profile</button>
     </div>
   </div>
 </div>
 
 <div id="page-place-bet" style="display:none;">
   <div class="section-header"><h2 class="section-title">🎲 Place Bet</h2></div>
-  <div class="g2">
-    <div class="card card-g">
+  <div class="grid-2">
+    <div class="card card-gold">
       <div class="card-title">Add Bet Entry</div>
-
-      <div class="form-group">
-        <label class="form-label">Customer Name <strong style="color:#fc8181;">*</strong> (Required)</label>
-        <input type="text" id="bc-customer" class="form-input" placeholder="Customer ka naam likho (required)"/>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Customer Name (Optional)</label>
+        <input type="text" id="bet-customer" class="form-input" placeholder="e.g. Rahul Kumar"/>
       </div>
 
       <div class="bet-box">
-        <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">1. Number Bet (1 ka 90)</div>
-        <span class="small-text">Same amount: 10, 25, 45 | Different amounts: 10=50, 25=100, 45=200</span>
-        <div style="display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end;">
-          <div><label class="form-label">Number(s) 0-99</label><input type="text" id="bn-input" class="form-input" placeholder="e.g. 10, 25=100, 45"/></div>
-          <div><label class="form-label">Amount ₹</label><input type="number" id="bn-amount" class="form-input" min="1" placeholder="100"/></div>
-          <div><button class="btn btn-gold" onclick="addNumBet()" style="margin-top:18px;">+ Add</button></div>
+        <div class="card-title" style="font-size:14px;margin-bottom:5px;color:#fff;">1. Number Bet (1 ka 90)</div>
+        <span class="small-text">Same amount: 10, 25, 45 | Different amounts: 10=50, 25=100</span>
+        <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
+          <div><label class="form-label">Number(s) 0-99</label><input type="text" id="bet-num-input" class="form-input" placeholder="10=50, 25=100"/></div>
+          <div><label class="form-label">Amount ₹</label><input type="number" id="bet-num-amount" class="form-input" min="1" placeholder="Default"/></div>
+          <div><button class="btn btn-gold" onclick="addNumberBet()" style="margin-top:20px;">+ Add</button></div>
         </div>
       </div>
 
       <div class="bet-box">
-        <div style="font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">2. Harup Bet (1 ka 9)</div>
+        <div class="card-title" style="font-size:14px;margin-bottom:5px;color:#fff;">2. Harup Bet (1 ka 9)</div>
         <span class="small-text">Same amount: 1, 5, 9 | Different amounts: 1=50, 4=100</span>
-        <div style="display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end;">
-          <div><label class="form-label">Harup(s) 0-9</label><input type="text" id="bh-input" class="form-input" placeholder="e.g. 1, 5=100, 9"/></div>
-          <div><label class="form-label">Amount ₹</label><input type="number" id="bh-amount" class="form-input" min="1" placeholder="100"/></div>
-          <div><button class="btn btn-blue" onclick="addHarupBet()" style="margin-top:18px;">+ Add</button></div>
+        <div style="display:grid;grid-template-columns:1fr 100px auto;gap:8px;align-items:end;">
+          <div><label class="form-label">Harup(s) 0-9</label><input type="text" id="bet-harup-input" class="form-input" placeholder="1=50, 4=100"/></div>
+          <div><label class="form-label">Amount ₹</label><input type="number" id="bet-harup-amount" class="form-input" min="1" placeholder="Default"/></div>
+          <div><button class="btn btn-blue" onclick="addHarupBet()" style="margin-top:20px;">+ Add</button></div>
         </div>
       </div>
 
-      <button class="btn btn-gold btn-full btn-lg" onclick="submitBets()" id="submit-btn" disabled>✅ Submit All Bets</button>
+      <button class="btn btn-gold btn-full btn-lg" onclick="submitAllBets()" id="submit-bets-btn" disabled>✅ Submit All Bets</button>
     </div>
 
     <div>
       <div class="card">
         <div class="card-title">Bet Cart</div>
-        <div id="cart-empty" class="empty-state" style="padding:20px;"><div class="empty-icon">🎲</div><div class="empty-text">No bets added yet</div></div>
-        <div id="cart-list"></div>
-        <div id="cart-totals" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
-          <div class="brow"><span>Total Bets</span><strong id="ct-count" style="color:var(--gold);">0</strong></div>
-          <div class="brow"><span>Total Amount</span><strong id="ct-amt" style="color:var(--gold);">₹0</strong></div>
-          <div class="brow"><span>Commission (10%)</span><strong id="ct-comm" style="color:#68d391;">₹0</strong></div>
+        <div id="bet-cart-empty" class="empty-state" style="padding:24px 10px;"><div class="empty-state-icon">🎲</div><div class="empty-state-text">No bets added</div></div>
+        <div id="bet-cart-list"></div>
+        <div id="bet-cart-totals" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+          <div class="bet-summary-row"><span>Total Bets</span><span class="amount-gold" id="cart-count">0</span></div>
+          <div class="bet-summary-row"><span>Total Play Amount</span><span class="amount-gold" id="cart-total">₹0</span></div>
+          <div class="bet-summary-row"><span>Your Commission</span><span style="color:#68d391;font-weight:700;" id="cart-commission">₹0</span></div>
         </div>
       </div>
     </div>
@@ -145,26 +176,15 @@
 
 <div id="page-my-bets" style="display:none;">
   <div class="section-header"><h2 class="section-title">📋 My Bets</h2></div>
-  <div class="card" style="margin-bottom:12px;">
-    <div class="sbar">
-      <input type="text" id="mb-search" class="sinput" placeholder="🔍 Customer name, Number, Harup..." oninput="filterMyBets()"/>
-      <select id="mb-type" class="sinput" onchange="filterMyBets()" style="max-width:150px;">
-        <option value="">All Bets</option>
-        <option value="number">Numbers Only</option>
-        <option value="harup">Harups Only</option>
-      </select>
-      <input type="text" id="mb-date" class="sinput" placeholder="Date DD-MM-YYYY..." oninput="filterMyBets()"/>
-    </div>
-    <div style="font-size:12px;color:var(--text2);">Showing: <strong id="mb-shown" style="color:var(--gold);">0</strong> bets</div>
-  </div>
-  <div class="card" style="padding:0;overflow:hidden;">
-    <div id="mb-loading" class="loading"><div class="spinner"></div>Loading...</div>
+  <div class="card" style="padding:15px;">
+    <input type="text" id="search-bets" class="form-input" placeholder="🔍 Search by Customer Name, Number, Harup..." oninput="filterMyBets()" style="margin-bottom:12px;"/>
+    <div id="mybets-loading" class="loading"><div class="spinner"></div>Loading...</div>
     <div style="overflow-x:auto;">
-      <table class="htable" id="mb-table" style="display:none;min-width:560px;">
-        <thead><tr><th>Customer</th><th>Type</th><th>Bet On</th><th>Amount</th><th>Win (If Pass)</th><th>Date & Time</th></tr></thead>
-        <tbody id="mb-body"></tbody>
+      <table class="history-table" id="mybets-table" style="display:none;min-width:500px;">
+        <thead><tr><th>Customer</th><th>Bet On</th><th>Play ₹</th><th>Win (If Pass)</th><th>Date & Time</th></tr></thead>
+        <tbody id="mybets-body"></tbody>
       </table>
-      <div id="mb-empty" class="empty-state" style="display:none;padding:40px;"><div class="empty-icon">📋</div><div class="empty-text">No bets found</div></div>
+      <div id="mybets-empty" class="empty-state" style="display:none;padding:40px;"><div class="empty-state-icon">📋</div><div class="empty-state-text">No bets found</div></div>
     </div>
   </div>
 </div>
@@ -172,12 +192,12 @@
 <div id="page-results" style="display:none;">
   <div class="section-header"><h2 class="section-title">📅 Results History</h2></div>
   <div class="card" style="padding:0;overflow:hidden;">
-    <div id="r-loading" class="loading"><div class="spinner"></div>Loading...</div>
-    <table class="htable" id="r-table" style="display:none;">
-      <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
-      <tbody id="r-body"></tbody>
+    <div id="results-loading" class="loading"><div class="spinner"></div>Loading...</div>
+    <table class="history-table" id="results-table" style="display:none;">
+      <thead><tr><th>Date</th><th>Number</th><th>Harup</th><th>Time</th></tr></thead>
+      <tbody id="results-body"></tbody>
     </table>
-    <div id="r-empty" class="empty-state" style="display:none;padding:40px;"><div class="empty-icon">📅</div><div class="empty-text">No results available</div></div>
+    <div id="results-empty" class="empty-state" style="display:none;padding:40px;"><div class="empty-state-icon">📅</div><div class="empty-state-text">No results available</div></div>
   </div>
 </div>
 
@@ -186,452 +206,318 @@
   <div class="analysis-tool">
     <div class="analysis-header">📋 Notepad Calculator</div>
     <div class="analysis-body">
-      <div class="analysis-in">
-        <div class="form-label">Enter numbers (0-99), one per line</div>
-        <textarea class="notepad" id="an-input" placeholder="23&#10;45&#10;67&#10;10&#10;34" oninput="runAnalysis()"></textarea>
-        <div style="margin-top:8px;display:flex;gap:6px;">
-          <button class="btn btn-gold btn-sm" onclick="runAnalysis()">▶ Analyze</button>
-          <button class="btn btn-gray btn-sm" onclick="document.getElementById('an-input').value='';runAnalysis()">✕ Clear</button>
-        </div>
+      <div class="analysis-input-area">
+        <div class="form-label">Enter numbers (one per line, 0-99)</div>
+        <textarea class="notepad" id="analysis-input" placeholder="23&#10;45&#10;67&#10;10&#10;34" oninput="runAnalysis()"></textarea>
+        <div style="margin-top:10px;display:flex;gap:6px;"><button class="btn btn-gold btn-sm" onclick="runAnalysis()">▶ Analyze</button><button class="btn btn-gray btn-sm" onclick="document.getElementById('analysis-input').value='';runAnalysis()">✕ Clear</button></div>
       </div>
-      <div class="analysis-out" id="an-out"><div class="empty-state" style="padding:20px;"><div class="empty-icon">🔢</div><div class="empty-text">Enter numbers</div></div></div>
+      <div class="analysis-results" id="analysis-results"><div class="empty-state" style="padding:30px 10px;"><div class="empty-state-icon">🔢</div><div class="empty-state-text">Enter numbers to analyze</div></div></div>
     </div>
   </div>
 </div>
 
 <div id="page-profile" style="display:none;">
   <div class="section-header"><h2 class="section-title">👤 My Profile</h2></div>
-  <div class="g2">
-    <div class="card">
-      <div class="card-title">Profile Information</div>
-      <div id="profile-info">
-        <div class="loading"><div class="spinner"></div></div>
-      </div>
+  <div class="card" style="max-width:500px;">
+    <div style="text-align:center;">
+      <img id="profile-img-display" src="https://via.placeholder.com/100" class="profile-img" alt="Profile Photo"/>
+      <h3 id="profile-name-display" style="color:#f0b429;margin-bottom:5px;">Agent Name</h3>
+      <span class="badge-g" id="profile-status-display">Active</span>
     </div>
-    <div class="card">
-      <div class="card-title">Change Password</div>
-      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Naya password Firebase mein save hoga. Agli baar naya password use karein.</p>
-      <div class="form-group"><label class="form-label">New Password *</label><input type="password" id="p-newpass" class="form-input" placeholder="Min 4 characters"/></div>
-      <div class="form-group"><label class="form-label">Confirm Password *</label><input type="password" id="p-confirm" class="form-input" placeholder="Same password again"/></div>
-      <button class="btn btn-gold btn-full" onclick="changePassword()" id="p-save-btn">🔑 Update Password</button>
-      <div id="p-success" class="alert alert-s" style="display:none;margin-top:10px;">✅ Password Firebase mein save ho gaya!</div>
+    <div style="margin-top:20px;">
+      <div class="result-item"><span class="result-key">Mobile No</span><span class="result-val" id="profile-mobile-display">--</span></div>
+      <div class="result-item"><span class="result-key">Aadhar No</span><span class="result-val" id="profile-aadhar-display">--</span></div>
+      <div class="result-item"><span class="result-key">Address</span><span class="result-val" id="profile-address-display" style="text-align:right;max-width:60%;">--</span></div>
     </div>
   </div>
 </div>
 
-</div></div></div><div id="toast-wrap" class="toast-wrap"></div>
+<div id="page-settings" style="display:none;">
+  <div class="section-header"><h2 class="section-title">⚙️ Settings</h2></div>
+  <div class="card" style="max-width:420px;">
+    <div class="card-title">Change Password</div>
+    <p style="font-size:12px;color:#9aa0b0;margin-bottom:16px;">Naya password save hone ke baad agli baar se wahi use karein.</p>
+    <div class="form-group"><label class="form-label">New Password</label><input type="password" id="setting-new-password" class="form-input" placeholder="Min 4 characters"/></div>
+    <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password" id="setting-confirm-password" class="form-input" placeholder="Confirm password"/></div>
+    <button class="btn btn-gold btn-full" onclick="changeAgentPassword()" id="change-pass-btn" style="margin-top:10px;">🔑 Update Password</button>
+    <div id="pass-success" class="alert alert-success" style="display:none;margin-top:12px;">✅ Password updated successfully!</div>
+  </div>
+</div>
+
+</div></div></div>
+
+<div id="toast-container" class="toast-container"></div>
 
 <script>
-// ============ FIREBASE ============
-const FC={apiKey:"AIzaSyBklYTB9FOP13g-jKSUR7OSaRT4RLazw_Y",authDomain:"satta-28662.firebaseapp.com",projectId:"satta-28662",storageBucket:"satta-28662.firebasestorage.app",messagingSenderId:"930874157007",appId:"1:930874157007:web:f48410bce16c0f522e54ba"};
-if(!firebase.apps.length)firebase.initializeApp(FC);
+const firebaseConfig={
+  apiKey:"AIzaSyBklYTB9FOP13g-jKSUR7OSaRT4RLazw_Y",
+  authDomain:"satta-28662.firebaseapp.com",
+  projectId:"satta-28662",
+  storageBucket:"satta-28662.firebasestorage.app",
+  messagingSenderId:"930874157007",
+  appId:"1:930874157007:web:f48410bce16c0f522e54ba"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
-db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+db.enablePersistence({synchronizeTabs:true}).catch(e=>console.warn(e));
 
-// ============ HELPERS ============
 const NW={0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',10:'Das',11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',18:'Atharah',19:'Unnis',20:'Bees',21:'Ikkis',22:'Bais',23:'Teis',24:'Chaubis',25:'Pachis',26:'Chhabis',27:'Sattais',28:'Atthais',29:'Untis',30:'Tees',31:'Ikatees',32:'Battees',33:'Tentees',34:'Chautees',35:'Paintees',36:'Chhattees',37:'Saintees',38:'Adatees',39:'Untaalis',40:'Chalis',41:'Ikatalis',42:'Byalis',43:'Tentalis',44:'Chavalis',45:'Paintalis',46:'Chhiyalis',47:'Saintalis',48:'Adtalis',49:'Unnchas',50:'Pachas',51:'Ikkyavan',52:'Bavan',53:'Tirpan',54:'Chauvan',55:'Pachpan',56:'Chhappan',57:'Sattavan',58:'Athavan',59:'Unsath',60:'Saath',61:'Iksath',62:'Basath',63:'Tirsath',64:'Chausath',65:'Painsath',66:'Chhiyasath',67:'Sarsath',68:'Adsath',69:'Unhattar',70:'Sattar',71:'Ikahattar',72:'Bahattar',73:'Tihattar',74:'Chauhattar',75:'Pachhattar',76:'Chhihattar',77:'Sathattar',78:'Athhattar',79:'Unasi',80:'Assi',81:'Ikyasi',82:'Bayasi',83:'Tirasi',84:'Chaurasi',85:'Pachasi',86:'Chhiyasi',87:'Satasi',88:'Athasi',89:'Nabbay',90:'Nabbe',91:'Ikyanabbe',92:'Banabbe',93:'Tiranabbe',94:'Chaunabbe',95:'Pachanabbe',96:'Chhiyanabbe',97:'Satanabbe',98:'Athanabbe',99:'Ninyanabbe'};
 function gW(n){return NW[parseInt(n)]||n.toString();}
-function getNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));}
-function getToday(){const d=getNow();return`${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;}
-function getTs(){return getNow().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+function getNowIST(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}));}
+function getToday(){const d=getNowIST();return`${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;}
+function getTimeStr(){return getNowIST().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
 function fmtINR(a){return'₹'+Number(a||0).toLocaleString('en-IN');}
-function fmtT(ts){if(!ts)return"6:00 PM";const u=ts.toUpperCase();if(u.includes('AM')||u.includes('PM'))return ts;const[h,m]=ts.split(':');let hr=parseInt(h);const ap=hr>=12?'PM':'AM';hr=hr%12||12;return`${hr}:${m} ${ap}`;}
-function parseTS(ts){const b=getNow();if(!ts){b.setHours(18,0,0,0);return b;}try{let t=ts.toUpperCase().trim(),h=18,m=0;if(t.includes('PM')||t.includes('AM')){const[tp,mod]=t.split(' ');const[hh,mm]=tp.split(':');h=parseInt(hh);m=parseInt(mm||0);if(mod==='PM'&&h<12)h+=12;if(mod==='AM'&&h===12)h=0;}else{const[hh,mm]=t.split(':');h=parseInt(hh);m=parseInt(mm||0);}b.setHours(h,m,0,0);}catch(e){b.setHours(18,0,0,0);}return b;}
-function toast(msg,type='i'){const c=document.getElementById('toast-wrap');const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast toast-${type}`;t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),3500);}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('login-page').style.display!=='none')agentLogin();});
 
-// ============ STATE ============
-let cAgent=null,cSettings={commissionRate:10},betCart=[],myBets=[],allResults=[],todayResult=null;
-let clockInt=null,unsubBets=null,unsubResults=null;
+function parseTimeStr(ts){
+  const b=getNowIST();if(!ts){b.setHours(18,0,0,0);return b;}
+  try{let t=ts.toUpperCase().trim(),h=18,m=0;if(t.includes('PM')||t.includes('AM')){const[tp,mod]=t.split(' ');const[hh,mm]=tp.split(':');h=parseInt(hh);m=parseInt(mm||0);if(mod==='PM'&&h<12)h+=12;if(mod==='AM'&&h===12)h=0;}else{const[hh,mm]=t.split(':');h=parseInt(hh);m=parseInt(mm||0);}b.setHours(h,m,0,0);}catch(e){b.setHours(18,0,0,0);}return b;
+}
+function fmtTime(ts){if(!ts)return"6:00 PM";const u=ts.toUpperCase();if(u.includes('AM')||u.includes('PM'))return ts;const[h,m]=ts.split(':');let hr=parseInt(h);const ap=hr>=12?'PM':'AM';hr=hr%12||12;return`${hr}:${m} ${ap}`;}
 
-// ============ LOCAL STORAGE LOAD ============
-window.addEventListener('DOMContentLoaded', () => {
-  const savedAgent = localStorage.getItem('updarbar_agent');
-  if(savedAgent) {
-    try {
-      cAgent = JSON.parse(savedAgent);
-      document.getElementById('login-page').style.display='none';
-      document.getElementById('agent-app').style.display='block';
-      document.getElementById('nav-aname').textContent=' | '+(cAgent.name||'');
-      initApp();
-    } catch(e) {}
-  }
-});
+let currentAgent=null, settings={commissionRate:10}, betCart=[], myBets=[], allResults=[], todayResult=null;
+let clockInterval=null, unsubBets=null, unsubResults=null;
 
-// ============ LOGIN ============
 async function agentLogin(){
-  const mob=document.getElementById('lmob').value.trim(),pass=document.getElementById('lpass').value.trim();
-  const err=document.getElementById('lerr');err.style.display='none';
-  if(!mob||!pass){err.style.display='block';err.textContent='Enter mobile and password.';return;}
-  const btn=document.getElementById('lbtn');btn.disabled=true;btn.textContent='Verifying...';
+  const mobile=document.getElementById('login-mobile').value.trim();
+  const password=document.getElementById('login-password').value.trim();
+  const errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!mobile||!password){errEl.style.display='block';errEl.textContent='Enter mobile and password.';return;}
+  const btn=document.getElementById('login-btn');btn.disabled=true;btn.textContent='Verifying...';
   try{
-    const snap=await db.collection('agents').where('mobile','==',mob).where('password','==',pass).get();
+    const snap=await db.collection('agents').where('mobile','==',mobile).where('password','==',password).get();
     if(!snap.empty){
-      const ag=snap.docs[0].data();
-      if(ag.status==='blocked'){err.style.display='block';err.textContent='Account blocked. Contact admin.';btn.disabled=false;btn.textContent='LOGIN';return;}
-      cAgent={id:snap.docs[0].id,...ag};
-      
-      // Save session so it survives refresh
-      localStorage.setItem('updarbar_agent', JSON.stringify(cAgent)); 
-      
-      document.getElementById('nav-aname').textContent=' | '+(cAgent.name||'');
+      const agent=snap.docs[0].data();
+      if(agent.status==='blocked'){errEl.style.display='block';errEl.textContent='Account blocked. Contact admin.';btn.disabled=false;btn.textContent='LOGIN';return;}
+      currentAgent={id:snap.docs[0].id,...agent};
+      document.getElementById('nav-agent-name').textContent=' | '+(currentAgent.name||'');
       document.getElementById('login-page').style.display='none';
       document.getElementById('agent-app').style.display='block';
       initApp();
-    }else{err.style.display='block';err.textContent='Invalid credentials.';}
-  }catch(e){err.style.display='block';err.textContent='Error: '+e.message;}
+      loadProfile();
+    } else {errEl.style.display='block';errEl.textContent='Invalid credentials.';}
+  }catch(e){errEl.style.display='block';errEl.textContent='Error: '+e.message;}
   btn.disabled=false;btn.textContent='LOGIN';
 }
 
 function agentLogout(){
-  if(clockInt){clearInterval(clockInt);clockInt=null;}
-  if(unsubBets){unsubBets();unsubBets=null;}
-  if(unsubResults){unsubResults();unsubResults=null;}
-  cAgent=null;betCart=[];myBets=[];allResults=[];todayResult=null;
-  
-  // Clear persistent data
-  localStorage.removeItem('updarbar_agent');
-  localStorage.removeItem('updarbar_cart');
-  
+  if(clockInterval) clearInterval(clockInterval);
+  if(unsubBets) unsubBets();
+  if(unsubResults) unsubResults();
+  currentAgent=null;betCart=[];myBets=[];allResults=[];todayResult=null;
   document.getElementById('login-page').style.display='flex';
   document.getElementById('agent-app').style.display='none';
-  document.getElementById('lmob').value='';document.getElementById('lpass').value='';
+  document.getElementById('login-mobile').value='';
+  document.getElementById('login-password').value='';
 }
 
-// ============ INIT ============
 function initApp(){
-  // Load saved cart if any
-  const savedCart = localStorage.getItem('updarbar_cart');
-  if(savedCart) {
-    try { 
-      betCart = JSON.parse(savedCart); 
-      renderCart(); 
-    } catch(e){}
-  }
-
-  loadSettings();
-  loadResults();
-  loadMyBets();
+  db.collection('settings').doc('main').onSnapshot(snap=>{if(snap.exists) settings=snap.data();else settings={commissionRate:10};});
+  loadResultsListener();
+  loadMyBetsListener();
   startClock();
   showPage('home');
-  loadProfileInfo();
+}
+
+function loadProfile(){
+  if(!currentAgent) return;
+  document.getElementById('profile-name-display').textContent=currentAgent.name||'Agent';
+  document.getElementById('profile-mobile-display').textContent=currentAgent.mobile||'--';
+  document.getElementById('profile-aadhar-display').textContent=currentAgent.aadhar||'Not provided';
+  document.getElementById('profile-address-display').textContent=currentAgent.address||'No address';
+  if(currentAgent.photoUrl) document.getElementById('profile-img-display').src=currentAgent.photoUrl;
 }
 
 function showPage(p){
   document.querySelectorAll('.page-content > div').forEach(d=>d.style.display='none');
   document.getElementById('page-'+p).style.display='block';
-  document.querySelectorAll('.slink').forEach(l=>l.classList.remove('active'));
-  const el=document.getElementById('nav-'+p);if(el)el.classList.add('active');
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
+  const el=document.getElementById('nav-'+p);if(el) el.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
 }
 
-// ============ CLOCK ============
 function startClock(){
-  if(clockInt)clearInterval(clockInt);
-  clockInt=setInterval(updateClock,1000);
-  updateClock();
+  if(clockInterval) clearInterval(clockInterval);
+  clockInterval=setInterval(()=>{
+    const now=getNowIST();
+    document.getElementById('live-time').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+    document.getElementById('live-date').textContent=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',weekday:'long'});
+
+    let targetNum=getNowIST(); targetNum.setHours(18,0,0,0);
+    let targetHarup=getNowIST(); targetHarup.setHours(18,0,0,0);
+    let dtsNum="6:00 PM", dtsHarup="6:00 PM";
+    
+    if(todayResult&&todayResult.numTime){targetNum=parseTimeStr(todayResult.numTime);dtsNum=fmtTime(todayResult.numTime);}
+    if(todayResult&&todayResult.harupTime){targetHarup=parseTimeStr(todayResult.harupTime);dtsHarup=fmtTime(todayResult.harupTime);}
+    
+    const numOpened=now>=targetNum;
+    const harupOpened=now>=targetHarup;
+
+    if(todayResult&&todayResult.number!==undefined&&numOpened){
+      document.getElementById('home-num').textContent=String(todayResult.number).padStart(2,'0');
+      document.getElementById('home-word').textContent=gW(todayResult.number);
+    } else {
+      document.getElementById('home-num').innerHTML='<span class="no-result">--</span>';
+      document.getElementById('home-word').textContent='Waiting...';
+    }
+
+    if(todayResult&&todayResult.harup!==undefined&&harupOpened){
+      document.getElementById('home-harup').textContent=todayResult.harup;
+      document.getElementById('home-harup-status').textContent='Opened';
+    } else {
+      document.getElementById('home-harup').innerHTML='<span class="no-result">--</span>';
+      document.getElementById('home-harup-status').textContent='Waiting...';
+    }
+
+    document.getElementById('home-time').textContent=`Num Open: ${dtsNum} | Harup Open: ${dtsHarup}`;
+
+    const today=getToday();
+    const vis=allResults.filter(r=>{
+      if(r.id===today){
+        const numT = r.numTime ? parseTimeStr(r.numTime) : parseTimeStr("18:00");
+        const harT = r.harupTime ? parseTimeStr(r.harupTime) : parseTimeStr("18:00");
+        return (now>=numT || now>=harT); 
+      }
+      return true;
+    });
+
+    const rt=document.getElementById('results-table');
+    const re=document.getElementById('results-empty');
+    document.getElementById('results-loading').style.display='none';
+    if(vis.length){
+      rt.style.display='table';re.style.display='none';
+      document.getElementById('results-body').innerHTML=vis.map(r=>{
+        const n = (r.number!==undefined && r.number!==null) ? String(r.number).padStart(2,'0') : '--';
+        const h = (r.harup!==undefined && r.harup!==null) ? r.harup : '--';
+        const t = r.numTime ? fmtTime(r.numTime) : (r.harupTime ? fmtTime(r.harupTime) : '--');
+        return `<tr><td>${r.id||'--'}</td><td><span class="number-badge">${n}</span></td><td><span style="background:#2b6cb0;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;">${h}</span></td><td>${t}</td></tr>`;
+      }).join('');
+    } else {rt.style.display='none';re.style.display='flex';}
+
+  },1000);
 }
-function updateClock(){
-  const now=getNow();
-  document.getElementById('lb-time').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
-  document.getElementById('lb-date').textContent=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',weekday:'long'});
 
-  let target=getNow();target.setHours(18,0,0,0);
-  let dts="6:00 PM";
-  if(todayResult&&todayResult.time){target=parseTS(todayResult.time);dts=fmtT(todayResult.time);}
-  const opened=now>=target;
-
-  if(todayResult&&opened){
-    document.getElementById('h-num').textContent=String(todayResult.number).padStart(2,'0');
-    document.getElementById('h-word').textContent=gW(todayResult.number);
-    document.getElementById('h-time').textContent='Opened at: '+dts;
-    document.getElementById('h-time').style.color='#68d391';
-  }else if(todayResult&&!opened){
-    const diff=target-now;
-    const h=String(Math.floor((diff/3600000)%24)).padStart(2,'0');
-    const m=String(Math.floor((diff/60000)%60)).padStart(2,'0');
-    const s=String(Math.floor((diff/1000)%60)).padStart(2,'0');
-    document.getElementById('h-num').innerHTML='<span style="color:var(--text3);">--</span>';
-    document.getElementById('h-word').textContent='Result ready! Opens soon...';
-    document.getElementById('h-time').textContent=`Opens in: ${h}h ${m}m ${s}s (${dts})`;
-    document.getElementById('h-time').style.color='#d4af37';
-  }else{
-    document.getElementById('h-num').innerHTML='<span style="color:var(--text3);">--</span>';
-    document.getElementById('h-word').textContent='Waiting for result...';
-    document.getElementById('h-time').textContent='Scheduled for: '+dts;
-    document.getElementById('h-time').style.color='var(--text3)';
-  }
-
-  const today=getToday();
-  const vis=allResults.filter(r=>{if(r.date===today&&now<parseTS(r.time))return false;return true;});
-  const rl=document.getElementById('r-loading'),rt=document.getElementById('r-table'),re=document.getElementById('r-empty');
-  if(rl)rl.style.display='none';
-  if(vis.length){if(rt)rt.style.display='table';if(re)re.style.display='none';const tb=document.getElementById('r-body');if(tb)tb.innerHTML=vis.map(r=>`<tr><td>${r.date}</td><td><span class="nbadge">${String(r.number).padStart(2,'00')}</span></td><td>${r.numberWord||gW(r.number)}</td><td>${fmtT(r.time)}</td></tr>`).join('');}
-  else{if(rt)rt.style.display='none';if(re)re.style.display='flex';}
-}
-
-// ============ DATA ============
-function loadSettings(){
-  db.collection('settings').doc('main').onSnapshot(s=>{
-    if(s.exists)cSettings=s.data();else cSettings={commissionRate:10};
-  });
-}
-function getRate(){return cSettings.commissionRate||10;}
-
-function loadResults(){
-  if(unsubResults){unsubResults();unsubResults=null;}
-  unsubResults=db.collection('results').orderBy('timestamp','desc').limit(60)
-    .onSnapshot(s=>{
-      allResults=s.docs.map(d=>({id:d.id,...d.data()}));
-      todayResult=allResults.find(r=>r.date===getToday())||null;
-      updateClock();
+function loadResultsListener(){
+  if(unsubResults) unsubResults();
+  unsubResults=db.collection('results').orderBy('timestamp','desc').limit(30)
+    .onSnapshot(snap=>{
+      allResults=snap.docs.map(d=>({id:d.id,...d.data()}));
+      todayResult=allResults.find(r=>r.id===getToday())||null;
     });
 }
 
-function loadMyBets(){
-  if(!cAgent)return;
-  if(unsubBets){unsubBets();unsubBets=null;}
-  unsubBets=db.collection('bets').where('agentId','==',cAgent.id)
-    .onSnapshot(s=>{
-      myBets=s.docs.map(d=>({id:d.id,...d.data()}));
-      myBets.sort((a,b)=>{
-        const ta=a.timestamp?.toDate?a.timestamp.toDate():new Date(0);
-        const tb2=b.timestamp?.toDate?b.timestamp.toDate():new Date(0);
-        return tb2-ta;
-      });
-      updateMyBetStats();
-      filterMyBets();
-      document.getElementById('mb-loading').style.display='none';
-    },err=>{
-      console.error('Bets error:',err);
-      document.getElementById('mb-loading').innerHTML=`<div style="color:#fc8181;padding:14px;">Error: ${err.message}</div>`;
-    });
-}
-
-function updateMyBetStats(){
+function loadMyBetsListener(){
+  if(!currentAgent) return;
+  if(unsubBets) unsubBets();
   const today=getToday();
-  const tb=myBets.filter(b=>b.date===today);
-  document.getElementById('st-bets-today').textContent=tb.length;
-  document.getElementById('st-amt-today').textContent=fmtINR(tb.reduce((s,b)=>s+(parseFloat(b.amount)||0),0));
-  document.getElementById('st-comm-today').textContent=fmtINR(tb.reduce((s,b)=>s+(parseFloat(b.commission)||0),0));
-}
-
-// ============ BET SYSTEM ============
-function saveCartState(){
-  localStorage.setItem('updarbar_cart', JSON.stringify(betCart));
-}
-
-function addNumBet(){
-  const inp=document.getElementById('bn-input').value.trim();
-  const defAmt=document.getElementById('bn-amount').value;
-  processBets('number',inp,defAmt);
-}
-function addHarupBet(){
-  const inp=document.getElementById('bh-input').value.trim();
-  const defAmt=document.getElementById('bh-amount').value;
-  processBets('harup',inp,defAmt);
+  unsubBets=db.collection('bets').where('agentId','==',currentAgent.id)
+    .onSnapshot(snap=>{
+      myBets=snap.docs.map(d=>({id:d.id,...d.data()}));
+      myBets.sort((a,b)=>{const ta=a.timestamp?.toDate?a.timestamp.toDate():new Date(0);const tb=b.timestamp?.toDate?b.timestamp.toDate():new Date(0);return tb-ta;});
+      renderMyBets(myBets);
+      const tb=myBets.filter(b=>b.date===today);
+      document.getElementById('my-bets-count').textContent=tb.length;
+      document.getElementById('my-amount').textContent=fmtINR(tb.reduce((s,b)=>s+parseFloat(b.amount||0),0));
+      document.getElementById('my-commission').textContent=fmtINR(tb.reduce((s,b)=>s+parseFloat(b.commission||0),0));
+      document.getElementById('mybets-loading').style.display='none';
+    });
 }
 
 function processBets(type,inputStr,defaultAmt){
-  const cust=document.getElementById('bc-customer').value.trim();
-  if(!cust){toast('Customer name required! Pehle customer ka naam likho.','e');document.getElementById('bc-customer').focus();return;}
-  if(!inputStr){toast(`Enter ${type}(s)`,'e');return;}
+  if(!inputStr||!inputStr.trim()){toast(`Enter ${type}(s)`,'error');return;}
+  const cust=document.getElementById('bet-customer').value.trim()||'Guest';
   const items=inputStr.split(',').map(s=>s.trim()).filter(s=>s);
-  if(!items.length){toast('Invalid input','e');return;}
-  let added=0;
-  const rate=getRate();
+  if(!items.length){toast('Invalid input','error');return;}
+  let added=0;const rate=settings.commissionRate||10;
   items.forEach(val=>{
-    let pv=val,amt=parseFloat(defaultAmt)||0;
+    let pv=val, amt=parseFloat(defaultAmt)||0;
     if(val.includes('=')){const p=val.split('=');pv=p[0].trim();amt=parseFloat(p[1].trim());}
-    if(isNaN(amt)||amt<=0){toast(`Skipped ${pv}: amount missing/invalid`,'e');return;}
-    const comm=parseFloat((amt*(rate/100)).toFixed(2));
-    const uAmt=parseFloat((amt*((100-rate)/100)).toFixed(2));
+    if(isNaN(amt)||amt<=0)return;
+    const comm=parseFloat((amt*(rate/100)).toFixed(2)), uAmt=parseFloat((amt*((100-rate)/100)).toFixed(2));
     if(type==='number'){
-      const n=parseInt(pv);
-      if(isNaN(n)||n<0||n>99){toast(`Invalid number: ${pv}`,'e');return;}
-      betCart.push({type:'number',num:n,harup:null,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*90});
-      added++;
-    }else{
-      const h=parseInt(pv);
-      if(isNaN(h)||h<0||h>9){toast(`Invalid harup: ${pv}`,'e');return;}
-      betCart.push({type:'harup',num:null,harup:h,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*9});
-      added++;
+      const n=parseInt(pv);if(isNaN(n)||n<0||n>99)return;
+      betCart.push({type:'number',num:n,harup:null,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*90});added++;
+    } else {
+      const h=parseInt(pv);if(isNaN(h)||h<0||h>9)return;
+      betCart.push({type:'harup',num:null,harup:h,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*9});added++;
     }
   });
-  if(added>0){
-    saveCartState(); // Save to local storage
-    renderCart();
-    toast(`${added} ${type} bet(s) added!`,'s');
-    document.getElementById(`b${type==='number'?'n':'h'}-input`).value='';
-    document.getElementById(`b${type==='number'?'n':'h'}-amount`).value='';
-  }
+  if(added>0){renderBetCart();toast(`${added} bet(s) added!`,'success');document.getElementById(`bet-${type}-input`).value='';document.getElementById(`bet-${type}-amount`).value='';}
 }
 
-function removeCart(i){
-  betCart.splice(i,1);
-  saveCartState(); 
-  renderCart();
-}
+function addNumberBet(){processBets('number',document.getElementById('bet-num-input').value,document.getElementById('bet-num-amount').value);}
+function addHarupBet(){processBets('harup',document.getElementById('bet-harup-input').value,document.getElementById('bet-harup-amount').value);}
+function removeBetEntry(i){betCart.splice(i,1);renderBetCart();}
 
-function renderCart(){
-  const empty=document.getElementById('cart-empty');
-  const list=document.getElementById('cart-list');
-  const totals=document.getElementById('cart-totals');
-  const btn=document.getElementById('submit-btn');
+function renderBetCart(){
+  const empty=document.getElementById('bet-cart-empty'),list=document.getElementById('bet-cart-list'),totals=document.getElementById('bet-cart-totals'),btn=document.getElementById('submit-bets-btn');
   if(!betCart.length){empty.style.display='block';list.innerHTML='';totals.style.display='none';btn.disabled=true;return;}
   empty.style.display='none';totals.style.display='block';btn.disabled=false;
-  list.innerHTML=betCart.map((b,i)=>`
-    <div class="brow" style="flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;">
-        <span style="font-size:12px;color:var(--text2);">👤 ${b.customerName}</span>
-        ${b.type==='number'
-          ?`<span class="nbadge" style="font-size:12px;">Num: ${String(b.num).padStart(2,'00')}</span>`
-          :`<span class="hbadge" style="font-size:12px;">Harup: ${b.harup}</span>`}
-        <span style="color:var(--gold);font-weight:700;">${fmtINR(b.amount)}</span>
-        <span class="win-badge">Win: ${fmtINR(b.userWin)}</span>
-      </div>
-      <button class="btn btn-red btn-sm" onclick="removeCart(${i})">✕</button>
-    </div>`).join('');
-  const tA=betCart.reduce((s,b)=>s+b.amount,0);
-  const tC=betCart.reduce((s,b)=>s+b.commission,0);
-  document.getElementById('ct-count').textContent=betCart.length;
-  document.getElementById('ct-amt').textContent=fmtINR(tA);
-  document.getElementById('ct-comm').textContent=fmtINR(tC);
+  list.innerHTML=betCart.map((b,i)=>`<div class="bet-summary-row"><div style="flex:1;"><span style="font-size:12px;color:#aaa;">👤 ${b.customerName}</span> ${b.type==='number'?`<span style="background:#d4af37;color:#000;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;">Num: ${String(b.num).padStart(2,'0')}</span>`:`<span style="background:#2b6cb0;color:#fff;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;">Harup: ${b.harup}</span>`}</div><div style="display:flex;align-items:center;gap:8px;"><span style="color:#f0b429;font-weight:700;">${fmtINR(b.amount)}</span> <button class="btn btn-red btn-sm" onclick="removeBetEntry(${i})">✕</button></div></div>`).join('');
+  document.getElementById('cart-count').textContent=betCart.length;
+  document.getElementById('cart-total').textContent=fmtINR(betCart.reduce((s,b)=>s+b.amount,0));
+  document.getElementById('cart-commission').textContent=fmtINR(betCart.reduce((s,b)=>s+b.commission,0));
 }
 
-async function submitBets(){
-  if(!betCart.length){toast('No bets in cart','e');return;}
-  if(!confirm(`Submit ${betCart.length} bet(s)?`))return;
-  const btn=document.getElementById('submit-btn');
-  btn.disabled=true;btn.textContent='Submitting...';
-  const today=getToday(),time=getTs();
+async function submitAllBets(){
+  if(!betCart.length)return;if(!confirm(`Submit ${betCart.length} bet(s)?`))return;
+  const btn=document.getElementById('submit-bets-btn');btn.disabled=true;btn.textContent='Submitting...';
+  const today=getToday(),time=getTimeStr();
   try{
-    const writes=betCart.map(b=>db.collection('bets').add({
-      agentId:cAgent.id,
-      agentName:cAgent.name||'',
-      agentMobile:cAgent.mobile||'',
-      customerName:b.customerName,
-      type:b.type,
-      number:b.type==='number'?b.num:null,
-      harup:b.type==='harup'?b.harup:null,
-      amount:b.amount,
-      commission:b.commission,
-      userAmount:b.userAmount,
-      userWin:b.userWin,
-      date:today,
-      time:time,
-      timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    }));
-    await Promise.all(writes);
-    betCart=[];
-    saveCartState(); // clear local storage
-    document.getElementById('bc-customer').value='';
-    renderCart();
-    toast(`${writes.length} bets submitted! Admin ko turant dikhega.`,'s');
-    showPage('my-bets');
-  }catch(e){toast('Error: '+e.message,'e');}
+    const batch=db.batch();
+    betCart.forEach(b=>{
+      const ref=db.collection('bets').doc();
+      batch.set(ref,{agentId:currentAgent.id,agentName:currentAgent.name,agentMobile:currentAgent.mobile||'',customerName:b.customerName,type:b.type,number:b.type==='number'?b.num:null,harup:b.type==='harup'?b.harup:null,amount:b.amount,commission:b.commission,userAmount:b.userAmount,userWin:b.userWin,date:today,time:time,settled:false,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+    });
+    await batch.commit();betCart=[];document.getElementById('bet-customer').value='';renderBetCart();toast('Bets submitted!','success');showPage('my-bets');
+  }catch(e){toast('Error: '+e.message,'error');}
   btn.disabled=false;btn.textContent='✅ Submit All Bets';
 }
 
-// ============ MY BETS - FILTER ============
 function filterMyBets(){
-  const q=(document.getElementById('mb-search')?.value||'').toLowerCase();
-  const qT=document.getElementById('mb-type')?.value||'';
-  const qD=(document.getElementById('mb-date')?.value||'').trim();
-  let data=[...myBets];
-  if(q)data=data.filter(b=>(b.customerName||'').toLowerCase().includes(q)||(b.number!=null&&String(b.number).includes(q))||(b.harup!=null&&String(b.harup).includes(q)));
-  if(qT)data=data.filter(b=>b.type===qT);
-  if(qD)data=data.filter(b=>(b.date||'').includes(qD));
-  document.getElementById('mb-shown').textContent=data.length;
-  renderMyBets(data);
+  const q=document.getElementById('search-bets').value.toLowerCase();
+  renderMyBets(myBets.filter(b=>(b.customerName||'').toLowerCase().includes(q)||(b.number!==null&&String(b.number).includes(q))||(b.harup!==null&&String(b.harup).includes(q))));
 }
+
 function renderMyBets(data){
-  const tbl=document.getElementById('mb-table'),empty=document.getElementById('mb-empty');
+  const tbl=document.getElementById('mybets-table'),empty=document.getElementById('mybets-empty');
   if(!data||!data.length){tbl.style.display='none';empty.style.display='flex';return;}
   empty.style.display='none';tbl.style.display='table';
-  document.getElementById('mb-body').innerHTML=data.map(b=>`<tr>
-    <td style="font-weight:700;color:var(--gold);font-size:13px;">${b.customerName||'Guest'}</td>
-    <td><span class="${b.type==='number'?'badge badge-gold':'badge badge-b'}">${b.type}</span></td>
-    <td>${b.type==='number'?`<span class="nbadge" style="font-size:12px;">${String(b.number!=null?b.number:0).padStart(2,'00')}</span>`:`<span class="hbadge">Harup: ${b.harup}</span>`}</td>
-    <td style="color:var(--gold);font-weight:600;">${fmtINR(b.amount)}</td>
-    <td><span class="win-badge">${fmtINR(b.userWin!==undefined?b.userWin:(b.type==='number'?(b.amount||0)*90:(b.amount||0)*9))}</span></td>
-    <td style="font-size:11px;color:#888;">${b.date||'--'}<br>${b.time||'--'}</td>
-  </tr>`).join('');
+  document.getElementById('mybets-body').innerHTML=data.map(b=>`<tr><td style="color:#f0b429;">${b.customerName||'Guest'}</td><td>${b.type==='number'||b.harup===null?`<span style="background:#d4af37;color:#000;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;">Num: ${String(b.number!==null?b.number:0).padStart(2,'0')}</span>`:`<span style="background:#2b6cb0;color:#fff;font-family:'Orbitron',monospace;font-size:12px;font-weight:700;padding:2px 8px;border-radius:5px;">Harup: ${b.harup}</span>`}</td><td style="color:#f0b429;font-weight:700;">${fmtINR(b.amount||0)}</td><td><span class="win-badge">${fmtINR(b.userWin!==undefined?b.userWin:(b.type==='number'?(b.amount||0)*90:(b.amount||0)*9))}</span></td><td style="font-size:11px;color:#888;">${b.date||'--'}<br>${b.time||'--'}</td></tr>`).join('');
 }
 
-// ============ PROFILE ============
-function loadProfileInfo(){
-  if(!cAgent)return;
-  const photo=cAgent.photoUrl?`<img src="${cAgent.photoUrl}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid var(--borderg);" onerror="this.outerHTML='<div style=\'font-size:40px;\'>👤</div>'"/>`:'<div style="font-size:40px;">👤</div>';
-  document.getElementById('profile-info').innerHTML=`
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
-      ${photo}
-      <div>
-        <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--gold);">${cAgent.name||'--'}</div>
-        <div style="font-size:12px;color:var(--text2);">📞 ${cAgent.mobile||'--'}</div>
-        <span class="${(cAgent.status||'active')==='active'?'badge badge-g':'badge badge-r'}">${cAgent.status||'active'}</span>
-      </div>
-    </div>
-    <div class="brow"><span>📞 Mobile</span><strong>${cAgent.mobile||'--'}</strong></div>
-    <div class="brow"><span>🪪 Aadhaar</span><strong>${cAgent.aadhaar||'Not provided'}</strong></div>
-    <div class="brow"><span>📍 Address</span><strong>${cAgent.address||'Not provided'}</strong></div>`;
-}
-
-// ============ CHANGE PASSWORD ============
-async function changePassword(){
-  const np=document.getElementById('p-newpass').value.trim();
-  const cp=document.getElementById('p-confirm').value.trim();
-  const succ=document.getElementById('p-success');
-  succ.style.display='none';
-  if(!np||!cp){toast('Fill both fields','e');return;}
-  if(np!==cp){toast('Passwords do not match','e');return;}
-  if(np.length<4){toast('Min 4 characters required','e');return;}
-  const btn=document.getElementById('p-save-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+async function changeAgentPassword(){
+  const np=document.getElementById('setting-new-password').value.trim();
+  const cp=document.getElementById('setting-confirm-password').value.trim();
+  const successEl=document.getElementById('pass-success');successEl.style.display='none';
+  if(!np||!cp)return toast('Fill both fields','error');if(np!==cp)return toast('Passwords do not match','error');
+  if(np.length<4)return toast('Min 4 characters required','error');
+  const btn=document.getElementById('change-pass-btn');btn.disabled=true;btn.textContent='Saving...';
   try{
-    await db.collection('agents').doc(cAgent.id).update({password:np});
-    cAgent.password=np;
-    
-    // Update local storage so new password persists
-    localStorage.setItem('updarbar_agent', JSON.stringify(cAgent));
-
-    succ.style.display='block';
-    document.getElementById('p-newpass').value='';
-    document.getElementById('p-confirm').value='';
-    toast('Password Firebase mein save ho gaya!','s');
-  }catch(e){toast('Error: '+e.message,'e');}
+    await db.collection('agents').doc(currentAgent.id).update({password:np});
+    currentAgent.password=np;document.getElementById('setting-new-password').value='';document.getElementById('setting-confirm-password').value='';
+    successEl.style.display='block';toast('Password updated!','success');
+  }catch(e){toast('Error: '+e.message,'error');}
   btn.disabled=false;btn.textContent='🔑 Update Password';
 }
 
-// ============ ANALYSIS ============
 function runAnalysis(){
-  const nums=document.getElementById('an-input').value.split('\n').map(l=>parseInt(l.trim())).filter(n=>!isNaN(n)&&n>=0&&n<=99);
-  const el=document.getElementById('an-out');
-  if(!nums.length){el.innerHTML='<div class="empty-state" style="padding:20px;"><div class="empty-icon">🔢</div><div class="empty-text">Enter numbers</div></div>';return;}
-  const total=nums.reduce((a,b)=>a+b,0);const avg=(total/nums.length).toFixed(2);
-  const df={};nums.forEach(n=>{const d=n%10;df[d]=(df[d]||0)+1;});
-  const top=Object.entries(df).sort((a,b)=>b[1]-a[1])[0][0];
-  const sug=(nums[nums.length-1]+Math.round(avg)%10)%100;
-  el.innerHTML=`
-    <div class="res-item"><span class="res-key">Count</span><span class="res-val">${nums.length}</span></div>
-    <div class="res-item"><span class="res-key">Total</span><span class="res-val">${total}</span></div>
-    <div class="res-item"><span class="res-key">Average</span><span class="res-val">${avg}</span></div>
-    <div class="res-item"><span class="res-key">Top Last Digit</span><span class="res-val">${top}</span></div>
-    <div class="res-item"><span class="res-key">Suggested</span><span class="res-val" style="color:#68d391;">${String(sug).padStart(2,'00')}</span></div>
-    <hr class="div"/>
-    <div class="form-label" style="margin-bottom:5px;">Last Digit Pattern</div>
-    <div style="font-family:'Orbitron',monospace;font-size:10px;color:var(--text3);word-break:break-all;line-height:2;">${nums.map(n=>n%10).join(' → ')}</div>`;
+  const nums=document.getElementById('analysis-input').value.split('\n').map(l=>parseInt(l.trim())).filter(n=>!isNaN(n)&&n>=0&&n<=99);
+  const el=document.getElementById('analysis-results');
+  if(!nums.length){el.innerHTML=`<div class="empty-state" style="padding:30px 10px;"><div class="empty-state-icon">🔢</div><div class="empty-state-text">Enter numbers to analyze</div></div>`;return;}
+  const total=nums.reduce((a,b)=>a+b,0),avg=(total/nums.length).toFixed(2),df={};nums.forEach(n=>{const d=n%10;df[d]=(df[d]||0)+1;});
+  const top=Object.entries(df).sort((a,b)=>b[1]-a[1])[0][0],sug=(nums[nums.length-1]+Math.round(avg)%10)%100,pat=nums.map(n=>n%10).join(' → ');
+  el.innerHTML=`<div class="result-item"><span class="result-key">Count</span><span class="result-val">${nums.length}</span></div><div class="result-item"><span class="result-key">Total</span><span class="result-val">${total}</span></div><div class="result-item"><span class="result-key">Average</span><span class="result-val">${avg}</span></div><div class="result-item"><span class="result-key">Top Last Digit</span><span class="result-val">${top}</span></div><div class="result-item"><span class="result-key">Suggested</span><span class="result-val" style="color:#68d391;">${String(sug).padStart(2,'0')}</span></div><hr class="divider"/><div class="form-label" style="margin-bottom:6px;">Last Digit Pattern</div><div style="font-family:'Orbitron',monospace;font-size:11px;color:var(--text-muted);word-break:break-all;line-height:2;">${pat}</div>`;
 }
 
-// ============ PWA ============
-let dPr=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dPr=e;document.getElementById('install-banner').classList.add('show');});
-window.addEventListener('appinstalled',()=>{document.getElementById('install-banner').classList.remove('show');dPr=null;});
-function installPWA(){
-  if(dPr){dPr.prompt();dPr.userChoice.then(()=>{dPr=null;document.getElementById('install-banner').classList.remove('show');});}
-  else alert('📱 Android Chrome: Menu(⋮) → "Add to Home Screen"\n🍎 iOS Safari: Share(□↑) → "Add to Home Screen"');
-}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('install-bar').classList.add('show');});
+window.addEventListener('appinstalled',()=>{document.getElementById('install-bar').classList.remove('show');deferredPrompt=null;});
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('install-bar').classList.remove('show');});}else{alert('Install steps:\n📱 Android Chrome: Menu (⋮) → "Add to Home Screen"');}}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(e=>console.log(e));}
 </script>
 </body>
 </html>

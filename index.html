@@ -9,6 +9,26 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="UP Darbar"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+/* Extra styles for harup hero */
+.hero-harup {
+  text-align:center;padding:24px 16px;
+  background:linear-gradient(135deg,#0f1a2a,#162030);
+  border:1px solid rgba(49,130,206,.4);border-radius:14px;
+  position:relative;overflow:hidden;box-shadow:0 0 22px rgba(49,130,206,.12);
+}
+.hero-harup::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse,rgba(49,130,206,.05) 0%,transparent 55%);pointer-events:none;}
+.harup-label{font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#63b3ed;margin-bottom:10px;opacity:.85;}
+.harup-num{font-family:'Orbitron',monospace;font-size:clamp(50px,11vw,90px);font-weight:900;color:#63b3ed;line-height:1;animation:hglow 2s ease-in-out infinite alternate;}
+@keyframes hglow{from{text-shadow:0 0 22px rgba(49,130,206,.4);}to{text-shadow:0 0 50px rgba(49,130,206,.6),0 0 80px rgba(49,130,206,.18);}}
+.harup-word{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:600;color:#a0c4ff;margin-top:6px;letter-spacing:.06em;}
+.harup-time{font-size:11px;color:#5a7a9a;margin-top:8px;font-family:'Orbitron',monospace;letter-spacing:.06em;}
+.result-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:640px){.result-split{grid-template-columns:1fr;}}
+.section-divider{display:flex;align-items:center;gap:10px;margin:16px 0 12px;}
+.section-divider span{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+</style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="common.js"></script>
@@ -24,34 +44,48 @@
 
 <div class="mc">
 
-  <!-- INSTALL -->
+  <!-- INSTALL BANNER -->
   <div class="install-banner" id="install-banner">
     <div style="font-size:28px">📲</div>
     <div style="flex:1;min-width:150px">
       <h3>Install UP Darbar App</h3>
-      <p>Mobile par install karein — bina internet ke bhi result dikhega!</p>
+      <p>Mobile par install karein — offline bhi result dikhega!</p>
     </div>
     <button class="btn btn-gold btn-sm" onclick="installPWA()">⬇ Install App</button>
     <button class="btn btn-gray btn-sm" onclick="this.closest('.install-banner').classList.remove('show')">✕</button>
   </div>
 
-  <!-- HERO -->
-  <div class="hero card-g" style="margin-bottom:20px">
-    <div class="hlabel"><span class="ldot"></span>TODAY'S OPEN NUMBER</div>
-    <div id="hnum" class="hnum orb">--</div>
-    <div id="hword" class="hword">Waiting for result...</div>
-    <div id="htime" class="htime">Open Time: 6:00 PM IST</div>
+  <!-- TODAY'S RESULTS — NUMBER & HARUP SIDE BY SIDE -->
+  <div class="section-divider"><span>Today's Results</span></div>
+  <div class="result-split" style="margin-bottom:20px">
+
+    <!-- NUMBER RESULT -->
+    <div class="hero card-g">
+      <div class="hlabel"><span class="ldot"></span>TODAY'S OPEN NUMBER</div>
+      <div id="hnum" class="hnum orb">--</div>
+      <div id="hword" class="hword">Waiting for result...</div>
+      <div id="htime" class="htime">Open Time: 6:00 PM IST</div>
+    </div>
+
+    <!-- HARUP RESULT -->
+    <div class="hero-harup">
+      <div class="harup-label"><span class="ldot" style="background:#63b3ed"></span>TODAY'S OPEN HARUP</div>
+      <div id="hharup" class="harup-num orb">--</div>
+      <div id="hhword" class="harup-word">Waiting for harup...</div>
+      <div id="hhtime" class="harup-time">Open Time: 6:00 PM IST</div>
+    </div>
+
   </div>
 
   <div class="g2" style="gap:20px;margin-bottom:20px">
 
-    <!-- HISTORY -->
+    <!-- HISTORY TABLE — shows both Number and Harup -->
     <div>
       <div class="sh"><h2 class="st">📅 Result History (Last 2 Months)</h2></div>
       <div class="card" style="padding:0;overflow:hidden;max-height:520px;overflow-y:auto">
         <div id="hload" class="loading"><div class="spinner"></div>Loading...</div>
         <table class="tbl" id="htbl" style="display:none">
-          <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
+          <thead><tr><th>Date</th><th>Number</th><th>Harup</th><th>Time</th></tr></thead>
           <tbody id="hbody"></tbody>
         </table>
       </div>
@@ -88,13 +122,14 @@
         </div>
       </div>
     </div>
+
   </div>
 </div>
 
 <div id="twrap" class="twrap"></div>
 
 <script>
-// Dummy history — 60 days
+// Dummy history — 60 days, with harup = last digit of number
 const DUMMY = (()=>{
   const nums=[12,34,56,78,90,23,45,67,89,1,11,22,33,44,55,66,77,88,99,
     7,13,19,25,31,37,43,49,53,61,69,72,81,84,93,96,5,17,28,39,47,
@@ -102,59 +137,109 @@ const DUMMY = (()=>{
   const r=[], now=getNow();
   for(let i=1;i<=60;i++){
     const d=new Date(now); d.setDate(d.getDate()-i);
-    r.push({date:`${p2(d.getDate())}-${p2(d.getMonth()+1)}-${d.getFullYear()}`,number:nums[i%nums.length],time:'6:00 PM',dummy:true});
+    const n=nums[i%nums.length];
+    r.push({
+      date:`${p2(d.getDate())}-${p2(d.getMonth()+1)}-${d.getFullYear()}`,
+      number:n, harup:n%10, time:'6:00 PM', dummy:true
+    });
   }
   return r;
 })();
 
-let allResults=[], todayRes=null;
+let allResults=[], todayNumRes=null, todayHarupRes=null;
 
-function renderHist(now){
+// Render history table (merges real + dummy)
+function renderHist(now) {
   const today=getToday();
-  const visReal=allResults.filter(r=>!(r.date===today && now<parseT(r.time)));
+  // Real results visible (time-gated)
+  const visReal=allResults.filter(r=>!(r.date===today&&now<parseT(r.time)));
   const realDates=new Set(visReal.map(r=>r.date));
+  // Merge
   const merged=[...visReal,...DUMMY.filter(d=>!realDates.has(d.date))]
-    .sort((a,b)=>{ const f=s=>{const p=s.split('-');return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();}; return f(b.date)-f(a.date); });
+    .sort((a,b)=>{
+      const f=s=>{const p=s.split('-');return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();};
+      return f(b.date)-f(a.date);
+    });
   document.getElementById('hload').style.display='none';
   document.getElementById('htbl').style.display='table';
   document.getElementById('hbody').innerHTML=merged.map(r=>`<tr>
     <td>${r.date}</td>
-    <td><span class="nb2">${p2(r.number)}</span></td>
-    <td style="color:var(--text2)">${gW(r.number)}</td>
-    <td style="font-size:11px;color:var(--text3)">${fmtT(r.time)}${r.dummy?'<span style="font-size:9px;color:#333;margin-left:4px">(est.)</span>':''}</td>
+    <td><span class="nb2">${p2(r.number)}</span><span style="font-size:10px;color:var(--text3);margin-left:5px">${gW(r.number)}</span></td>
+    <td><span class="hb2">H${r.harup!==undefined?r.harup:r.number%10}</span><span style="font-size:10px;color:#5a7a9a;margin-left:5px">${gHW(r.harup!==undefined?r.harup:r.number%10)}</span>${r.dummy?'<span style="font-size:9px;color:#333;margin-left:3px">(est.)</span>':''}</td>
+    <td style="font-size:11px;color:var(--text3)">${fmtT(r.time)}</td>
   </tr>`).join('');
 }
 
+// Main tick — updates clock, hero number, hero harup
 setInterval(()=>{
   const now=getNow();
   document.getElementById('qtime').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
   document.getElementById('qdate').textContent=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-  let target=getNow(); target.setHours(18,0,0,0); let dts='6:00 PM';
-  if(todayRes?.time){target=parseT(todayRes.time);dts=fmtT(todayRes.time);}
-  const opened=now>=target;
+
+  // -- NUMBER HERO --
+  let nTarget=getNow(); nTarget.setHours(18,0,0,0);
+  let ndts='6:00 PM';
+  if(todayNumRes?.time){nTarget=parseT(todayNumRes.time);ndts=fmtT(todayNumRes.time);}
+  const nOpened=now>=nTarget;
+
   const nEl=document.getElementById('hnum'),wEl=document.getElementById('hword'),tEl=document.getElementById('htime');
-  if(todayRes&&opened){
-    nEl.textContent=p2(todayRes.number); wEl.textContent=gW(todayRes.number);
-    tEl.textContent='Opened at: '+dts; tEl.style.color='#68d391';
-  } else if(todayRes&&!opened){
-    const diff=target-now;
-    const h=p2(Math.floor((diff/3600000)%24)),m=p2(Math.floor((diff/60000)%60)),s=p2(Math.floor((diff/1000)%60));
+  if(todayNumRes&&nOpened){
+    nEl.textContent=p2(todayNumRes.number);wEl.textContent=gW(todayNumRes.number);
+    tEl.textContent='Opened at: '+ndts;tEl.style.color='#68d391';
+  } else if(todayNumRes&&!nOpened){
+    const diff=nTarget-now;
     nEl.innerHTML='<span style="color:var(--text3)">--</span>';
-    wEl.textContent=`Result ready! Opens in ${h}h ${m}m ${s}s`;
-    tEl.textContent='Scheduled: '+dts; tEl.style.color='#d4af37';
+    wEl.textContent=`Opens in: ${p2(Math.floor((diff/3600000)%24))}h ${p2(Math.floor((diff/60000)%60))}m ${p2(Math.floor((diff/1000)%60))}s`;
+    tEl.textContent='Scheduled: '+ndts;tEl.style.color='#d4af37';
   } else {
     nEl.innerHTML='<span style="color:var(--text3)">--</span>';
-    wEl.textContent='Waiting for result...';
-    tEl.textContent='Open Time: '+dts; tEl.style.color='var(--text3)';
+    wEl.textContent='Waiting for result...';tEl.textContent='Open Time: '+ndts;tEl.style.color='var(--text3)';
   }
+
+  // -- HARUP HERO --
+  let hTarget=getNow(); hTarget.setHours(18,0,0,0);
+  let hdts='6:00 PM';
+  if(todayHarupRes?.time){hTarget=parseT(todayHarupRes.time);hdts=fmtT(todayHarupRes.time);}
+  const hOpened=now>=hTarget;
+
+  const hhEl=document.getElementById('hharup'),hwEl=document.getElementById('hhword'),htEl=document.getElementById('hhtime');
+  if(todayHarupRes&&hOpened){
+    hhEl.textContent=String(todayHarupRes.harup);hwEl.textContent=gHW(todayHarupRes.harup);
+    htEl.textContent='Opened at: '+hdts;htEl.style.color='#68d391';
+  } else if(todayHarupRes&&!hOpened){
+    const diff=hTarget-now;
+    hhEl.innerHTML='<span style="color:#2d5a7a">--</span>';
+    hwEl.textContent=`Opens in: ${p2(Math.floor((diff/3600000)%24))}h ${p2(Math.floor((diff/60000)%60))}m ${p2(Math.floor((diff/1000)%60))}s`;
+    htEl.textContent='Scheduled: '+hdts;htEl.style.color='#d4af37';
+  } else {
+    hhEl.innerHTML='<span style="color:#2d5a7a">--</span>';
+    hwEl.textContent='Waiting for harup...';htEl.textContent='Open Time: '+hdts;htEl.style.color='#2d5a7a';
+  }
+
   renderHist(now);
 },1000);
 
+// Firebase: Listen to results (numbers)
 DB.collection('results').orderBy('timestamp','desc').limit(60).onSnapshot(snap=>{
   allResults=snap.docs.map(d=>({id:d.id,...d.data()}));
-  todayRes=allResults.find(r=>r.date===getToday())||null;
+  // Build harup from number last digit if no harup result
+  todayNumRes=allResults.find(r=>r.date===getToday()&&r.type!=='harup')||null;
 },()=>{});
 
+// Firebase: Listen to harup results (separate collection entry with type:'harup')
+DB.collection('harup_results').orderBy('timestamp','desc').limit(30).onSnapshot(snap=>{
+  const hResults=snap.docs.map(d=>({id:d.id,...d.data()}));
+  todayHarupRes=hResults.find(r=>r.date===getToday())||null;
+
+  // Merge harup into history table data
+  const today=getToday();
+  hResults.forEach(hr=>{
+    const existing=allResults.find(r=>r.date===hr.date);
+    if(existing) existing.harup=hr.harup;
+  });
+},()=>{});
+
+// Analysis Tool
 function runAn(){
   const nums=document.getElementById('anin').value.split('\n').map(l=>parseInt(l.trim())).filter(n=>!isNaN(n)&&n>=0&&n<=99);
   const el=document.getElementById('anout');

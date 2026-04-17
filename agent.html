@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +10,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="UP Darbar"/>
 <link rel="stylesheet" href="style.css"/>
+<style>
+.hero-harup-sm{background:linear-gradient(135deg,#0f1a2a,#162030);border:1px solid rgba(49,130,206,.4);border-radius:12px;padding:20px 16px;text-align:center;}
+.hn-blue{font-family:'Orbitron',monospace;font-size:clamp(44px,10vw,80px);font-weight:900;color:#63b3ed;line-height:1;animation:hglow 2s ease-in-out infinite alternate;}
+@keyframes hglow{from{text-shadow:0 0 22px rgba(49,130,206,.4);}to{text-shadow:0 0 50px rgba(49,130,206,.6);}}
+.hw-blue{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:600;color:#a0c4ff;margin-top:5px;}
+.ht-blue{font-size:11px;color:#5a7a9a;margin-top:6px;font-family:'Orbitron',monospace;}
+.result-split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:600px){.result-split{grid-template-columns:1fr;}}
+</style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="common.js"></script>
@@ -65,12 +75,23 @@
     <button class="btn btn-gold btn-sm" onclick="installPWA()">⬇ Install</button>
     <button class="btn btn-gray btn-sm" onclick="this.closest('.install-banner').classList.remove('show')">✕</button>
   </div>
-  <div class="hero card-g" style="margin-bottom:14px">
-    <div class="hlabel"><span class="ldot"></span>TODAY'S OPEN NUMBER</div>
-    <div id="hnum" class="hnum orb">--</div>
-    <div id="hword" class="hword">Waiting for result...</div>
-    <div id="htime" class="htime">Open Time: 6:00 PM</div>
+
+  <!-- NUMBER + HARUP SIDE BY SIDE -->
+  <div class="result-split">
+    <div class="hero card-g">
+      <div class="hlabel"><span class="ldot"></span>TODAY'S NUMBER</div>
+      <div id="hnum" class="hnum orb">--</div>
+      <div id="hword" class="hword">Waiting...</div>
+      <div id="htime" class="htime">6:00 PM</div>
+    </div>
+    <div class="hero-harup-sm">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#63b3ed;margin-bottom:10px"><span class="ldot" style="background:#63b3ed"></span>TODAY'S HARUP</div>
+      <div id="hharup" class="hn-blue">--</div>
+      <div id="hhword" class="hw-blue">Waiting...</div>
+      <div id="hhtime" class="ht-blue">6:00 PM</div>
+    </div>
   </div>
+
   <div class="g3" style="margin-bottom:12px">
     <div class="sc"><div class="sic">🎲</div><div class="sv" id="stb">0</div><div class="sl">Bets Today</div></div>
     <div class="sc"><div class="sic">💰</div><div class="sv" id="sta" style="font-size:15px">₹0</div><div class="sl">Amount Today</div></div>
@@ -93,34 +114,39 @@
   <div class="g2">
     <div class="card card-g">
       <div class="ctitle">Add Bet Entry</div>
-      <!-- CUSTOMER NAME — REQUIRED -->
+
+      <!-- CUSTOMER NAME — REQUIRED — clears after submit -->
       <div class="fg">
         <label class="fl">Customer Name <span style="color:#fc8181">★ Required</span></label>
-        <input type="text" id="bcu" class="fi" placeholder="Customer ka naam (zaruri hai)" oninput="highlightCust()"/>
-        <div id="bcu-warn" style="display:none;font-size:11px;color:#fc8181;margin-top:4px">⚠️ Customer naam likhna zaruri hai — bina naam bet nahi lagegi!</div>
+        <input type="text" id="bcu" class="fi" placeholder="Customer ka naam (zaruri hai)" oninput="custCheck()"/>
+        <div id="bcu-warn" style="display:none;font-size:11px;color:#fc8181;margin-top:3px">⚠️ Customer naam zaruri hai!</div>
       </div>
+
       <!-- NUMBER BET -->
       <div class="betbox">
         <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">1. Number Bet <span style="color:#68d391;font-size:11px">(1 ka 90 win)</span></div>
-        <span class="smtxt">Same amount: 10, 25, 45 &nbsp;|&nbsp; Different: 10=50, 25=100, 45=200</span>
+        <span class="smtxt">Same amt: 10, 25, 45 &nbsp;|&nbsp; Alag amt: 10=50, 25=100, 45=200</span>
         <div style="display:grid;grid-template-columns:1fr 86px auto;gap:7px;align-items:end">
           <div><label class="fl">Number(s) 0-99</label><input type="text" id="bnin" class="fi" placeholder="e.g. 10, 25=100, 45"/></div>
           <div><label class="fl">Amount ₹</label><input type="number" id="bnam" class="fi" min="1" placeholder="100"/></div>
           <div><button class="btn btn-gold" onclick="addNum()" style="margin-top:18px">+ Add</button></div>
         </div>
       </div>
+
       <!-- HARUP BET -->
       <div class="betbox">
         <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px">2. Harup Bet <span style="color:#63b3ed;font-size:11px">(1 ka 9 win)</span></div>
-        <span class="smtxt">Same amount: 1, 5, 9 &nbsp;|&nbsp; Different: 1=50, 4=100</span>
+        <span class="smtxt">Same amt: 1, 5, 9 &nbsp;|&nbsp; Alag amt: 1=50, 4=100</span>
         <div style="display:grid;grid-template-columns:1fr 86px auto;gap:7px;align-items:end">
           <div><label class="fl">Harup(s) 0-9</label><input type="text" id="bhin" class="fi" placeholder="e.g. 1, 5=100, 9"/></div>
           <div><label class="fl">Amount ₹</label><input type="number" id="bham" class="fi" min="1" placeholder="100"/></div>
           <div><button class="btn btn-blue" onclick="addHarup()" style="margin-top:18px">+ Add</button></div>
         </div>
       </div>
-      <button class="btn btn-gold btn-full btn-lg" onclick="submitBets()" id="subbtn" disabled>✅ Submit All Bets to Firebase</button>
+
+      <button class="btn btn-gold btn-full btn-lg" onclick="submitBets()" id="subbtn" disabled>✅ Submit Bets to Firebase</button>
     </div>
+
     <!-- CART -->
     <div>
       <div class="card">
@@ -164,13 +190,13 @@
   </div>
 </div>
 
-<!-- RESULTS -->
+<!-- RESULTS — shows Number AND Harup -->
 <div id="pg-results" style="display:none">
   <div class="sh"><h2 class="st">📅 Results History</h2></div>
-  <div class="card" style="padding:0;overflow:hidden">
+  <div class="card" style="padding:0;overflow:hidden;max-height:520px;overflow-y:auto">
     <div id="rload" class="loading"><div class="spinner"></div>Loading...</div>
     <table class="tbl" id="rtbl" style="display:none">
-      <thead><tr><th>Date</th><th>Number</th><th>Word</th><th>Time</th></tr></thead>
+      <thead><tr><th>Date</th><th>Number</th><th>Harup</th><th>Time</th></tr></thead>
       <tbody id="rbody"></tbody>
     </table>
     <div id="rempty" class="empty-st" style="display:none;padding:36px"><div class="ei">📅</div><div class="et">No results yet</div></div>
@@ -211,10 +237,10 @@
       </div>
       <div class="card">
         <div class="ctitle">Change Password</div>
-        <p style="font-size:11px;color:var(--text2);margin-bottom:12px">Naya password directly Firebase mein save hoga.</p>
+        <p style="font-size:11px;color:var(--text2);margin-bottom:10px">Password directly Firebase mein save hoga — browser storage nahi.</p>
         <div class="fg"><label class="fl">New Password ★</label><input type="password" id="pnew" class="fi" placeholder="Min 4 characters"/></div>
-        <div class="fg"><label class="fl">Confirm Password ★</label><input type="password" id="pcon" class="fi" placeholder="Same password again"/></div>
-        <button class="btn btn-gold btn-full" onclick="changePwd()" id="pbtn">🔑 Update Password</button>
+        <div class="fg"><label class="fl">Confirm Password ★</label><input type="password" id="pcon" class="fi" placeholder="Same again"/></div>
+        <button class="btn btn-gold btn-full" onclick="changePwd()" id="pbtn">🔑 Update Password (Firebase)</button>
         <div id="pok" class="alert alert-s" style="display:none;margin-top:10px">✅ Password Firebase mein save ho gaya!</div>
       </div>
     </div>
@@ -228,11 +254,11 @@
 <div id="twrap" class="twrap"></div>
 
 <script>
-// ======================================================
-// AGENT APP — Complete working system
-// ======================================================
-let cAg=null, cS={commissionRate:10}, cart=[], myBets=[], allResults=[], todayR=null;
-let cInt=null, unsubB=null, unsubR=null, allSettlements=[];
+// ====================================================
+// AGENT APP — COMPLETE
+// ====================================================
+let cAg=null, cS={commissionRate:10}, cart=[], myBets=[], allResults=[], allHarupResults=[], todayR=null, todayH=null, allSettlements=[];
+let cInt=null, unsubB=null, unsubR=null, unsubH=null;
 
 function SP(p){
   document.querySelectorAll('#PC > div').forEach(d=>d.style.display='none');
@@ -269,14 +295,16 @@ function doLogout(){
   if(cInt){clearInterval(cInt);cInt=null;}
   if(unsubB){unsubB();unsubB=null;}
   if(unsubR){unsubR();unsubR=null;}
-  cAg=null;cart=[];myBets=[];allResults=[];todayR=null;
+  if(unsubH){unsubH();unsubH=null;}
+  cAg=null;cart=[];myBets=[];allResults=[];allHarupResults=[];todayR=null;todayH=null;
   document.getElementById('LP').style.display='flex';
   document.getElementById('APP').style.display='none';
   document.getElementById('lm').value='';document.getElementById('lp').value='';
 }
 
 function initApp(){
-  loadSettings();loadResults();loadMyBets();loadSettlements();startClock();SP('home');
+  loadSettings();loadResults();loadHarupResults();loadMyBets();loadSettlements();
+  startClock();SP('home');
 }
 
 function startClock(){
@@ -288,23 +316,44 @@ function tick(){
   const now=getNow();
   document.getElementById('lbt').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
   document.getElementById('lbd').textContent=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',weekday:'long'});
-  let target=getNow();target.setHours(18,0,0,0);let dts='6:00 PM';
-  if(todayR?.time){target=parseT(todayR.time);dts=fmtT(todayR.time);}
-  const opened=now>=target;
+
+  // NUMBER
+  let nT=getNow();nT.setHours(18,0,0,0);let ndts='6:00 PM';
+  if(todayR?.time){nT=parseT(todayR.time);ndts=fmtT(todayR.time);}
+  const nO=now>=nT;
   const nEl=document.getElementById('hnum'),wEl=document.getElementById('hword'),tEl=document.getElementById('htime');
-  if(todayR&&opened){nEl.textContent=p2(todayR.number);wEl.textContent=gW(todayR.number);tEl.textContent='Opened at: '+dts;tEl.style.color='#68d391';}
-  else if(todayR&&!opened){
-    const diff=target-now;
-    nEl.innerHTML='<span style="color:var(--text3)">--</span>';
-    wEl.textContent=`Opens in: ${p2(Math.floor((diff/3600000)%24))}h ${p2(Math.floor((diff/60000)%60))}m ${p2(Math.floor((diff/1000)%60))}s`;
-    tEl.textContent='Scheduled: '+dts;tEl.style.color='#d4af37';
-  }else{nEl.innerHTML='<span style="color:var(--text3)">--</span>';wEl.textContent='Waiting for result...';tEl.textContent='Open Time: '+dts;tEl.style.color='var(--text3)';}
-  // Results page
-  const today=getToday(),vis=allResults.filter(r=>!(r.date===today&&now<parseT(r.time)));
+  if(todayR&&nO){nEl.textContent=p2(todayR.number);wEl.textContent=gW(todayR.number);tEl.textContent='Opened: '+ndts;tEl.style.color='#68d391';}
+  else if(todayR&&!nO){const d=nT-now;nEl.innerHTML='<span style="color:var(--text3)">--</span>';wEl.textContent=`Opens in: ${p2(Math.floor((d/3600000)%24))}h ${p2(Math.floor((d/60000)%60))}m ${p2(Math.floor((d/1000)%60))}s`;tEl.textContent='At: '+ndts;tEl.style.color='#d4af37';}
+  else{nEl.innerHTML='<span style="color:var(--text3)">--</span>';wEl.textContent='Waiting...';tEl.textContent='Time: '+ndts;tEl.style.color='var(--text3)';}
+
+  // HARUP
+  let hT=getNow();hT.setHours(18,0,0,0);let hdts='6:00 PM';
+  if(todayH?.time){hT=parseT(todayH.time);hdts=fmtT(todayH.time);}
+  const hO=now>=hT;
+  const hhEl=document.getElementById('hharup'),hwEl=document.getElementById('hhword'),htEl=document.getElementById('hhtime');
+  if(todayH&&hO){hhEl.textContent=String(todayH.harup);hwEl.textContent=gHW(todayH.harup);htEl.textContent='Opened: '+hdts;htEl.style.color='#68d391';}
+  else if(todayH&&!hO){const d=hT-now;hhEl.innerHTML='<span style="color:#2d5a7a">--</span>';hwEl.textContent=`Opens in: ${p2(Math.floor((d/3600000)%24))}h ${p2(Math.floor((d/60000)%60))}m ${p2(Math.floor((d/1000)%60))}s`;htEl.textContent='At: '+hdts;htEl.style.color='#d4af37';}
+  else{hhEl.innerHTML='<span style="color:#2d5a7a">--</span>';hwEl.textContent='Waiting for harup...';htEl.textContent='Time: '+hdts;htEl.style.color='#2d5a7a';}
+
+  // Results page — merged numbers + harups
+  const today=getToday();
+  const visN=allResults.filter(r=>!(r.date===today&&now<parseT(r.time)));
+  const visH=allHarupResults.filter(r=>!(r.date===today&&now<parseT(r.time)));
   const rl=document.getElementById('rload'),rt=document.getElementById('rtbl'),re=document.getElementById('rempty');
   if(rl)rl.style.display='none';
-  if(vis.length){if(rt)rt.style.display='table';if(re)re.style.display='none';const tb=document.getElementById('rbody');if(tb)tb.innerHTML=vis.map(r=>`<tr><td>${r.date}</td><td><span class="nb2">${p2(r.number)}</span></td><td>${r.numberWord||gW(r.number)}</td><td>${fmtT(r.time)}</td></tr>`).join('');}
-  else{if(rt)rt.style.display='none';if(re)re.style.display='flex';}
+  // Merge by date
+  const dates=new Set([...visN.map(r=>r.date),...visH.map(r=>r.date)]);
+  const merged=[...dates].sort((a,b)=>{const f=s=>{const p=s.split('-');return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime();};return f(b)-f(a);}).map(date=>({date,num:visN.find(r=>r.date===date),har:visH.find(r=>r.date===date)}));
+  if(merged.length){
+    if(rt)rt.style.display='table';if(re)re.style.display='none';
+    const tb=document.getElementById('rbody');
+    if(tb)tb.innerHTML=merged.map(r=>`<tr>
+      <td>${r.date}</td>
+      <td>${r.num?`<span class="nb2" style="font-size:12px">${p2(r.num.number)}</span> <span style="font-size:10px;color:var(--text3)">${gW(r.num.number)}</span>`:'<span style="color:var(--text3);font-size:11px">Pending</span>'}</td>
+      <td>${r.har?`<span class="hb2" style="font-size:12px">H${r.har.harup}</span> <span style="font-size:10px;color:#5a7a9a">${gHW(r.har.harup)}</span>`:'<span style="color:#2d5a7a;font-size:11px">Pending</span>'}</td>
+      <td style="font-size:11px;color:var(--text3)">${r.num?fmtT(r.num.time):(r.har?fmtT(r.har.time):'--')}</td>
+    </tr>`).join('');
+  } else {if(rt)rt.style.display='none';if(re)re.style.display='flex';}
 }
 
 function loadSettings(){DB.collection('settings').doc('main').onSnapshot(s=>{if(s.exists)cS=s.data();else cS={commissionRate:10};});}
@@ -314,33 +363,35 @@ function loadResults(){
   if(unsubR){unsubR();unsubR=null;}
   unsubR=DB.collection('results').orderBy('timestamp','desc').limit(60).onSnapshot(s=>{
     allResults=s.docs.map(d=>({id:d.id,...d.data()}));
-    todayR=allResults.find(r=>r.date===getToday())||null;
-    tick();
+    todayR=allResults.find(r=>r.date===getToday())||null;tick();
   },e=>console.error('Results:',e));
 }
 
-// KEY FIX — NO orderBy on bets to avoid Firestore composite index requirement
+function loadHarupResults(){
+  if(unsubH){unsubH();unsubH=null;}
+  unsubH=DB.collection('harup_results').orderBy('timestamp','desc').limit(30).onSnapshot(s=>{
+    allHarupResults=s.docs.map(d=>({id:d.id,...d.data()}));
+    todayH=allHarupResults.find(r=>r.date===getToday())||null;tick();
+  },()=>{});
+}
+
+// NO orderBy on bets — avoids Firestore index requirement
 function loadMyBets(){
   if(!cAg)return;
   if(unsubB){unsubB();unsubB=null;}
   document.getElementById('mbload').style.display='block';
-  unsubB=DB.collection('bets').where('agentId','==',cAg.id)
-    .onSnapshot(s=>{
-      console.log('✅ My bets from Firebase:',s.docs.length);
-      myBets=sortBets(s.docs.map(d=>({id:d.id,...d.data()})));
-      updateStats();filterBets();
-      document.getElementById('mbload').style.display='none';
-    },e=>{
-      console.error('❌ Bets error:',e);
-      document.getElementById('mbload').innerHTML=`<div style="color:#fc8181;padding:14px">Error loading bets: ${e.message}<br>Check Firestore rules!</div>`;
-    });
+  unsubB=DB.collection('bets').where('agentId','==',cAg.id).onSnapshot(s=>{
+    console.log('✅ My bets from Firebase:',s.docs.length);
+    myBets=sortBets(s.docs.map(d=>({id:d.id,...d.data()})));
+    updateStats();filterBets();
+    document.getElementById('mbload').style.display='none';
+  },e=>{console.error('Bets error:',e);document.getElementById('mbload').innerHTML=`<div style="color:#fc8181;padding:14px">Bets error: ${e.message}<br>Check Firestore rules!</div>`;});
 }
 
 function loadSettlements(){
   if(!cAg)return;
   DB.collection('settlements').where('agentId','==',cAg.id).onSnapshot(s=>{
-    allSettlements=s.docs.map(d=>({id:d.id,...d.data()}));
-    loadCommInfo();
+    allSettlements=s.docs.map(d=>({id:d.id,...d.data()}));loadCommInfo();
   },()=>{});
 }
 
@@ -352,10 +403,10 @@ function updateStats(){
 }
 
 // BET SYSTEM
-function highlightCust(){
+function custCheck(){
   const v=document.getElementById('bcu').value.trim();
   document.getElementById('bcu-warn').style.display=v?'none':'block';
-  document.getElementById('bcu').style.borderColor=v?'':'var(--red)';
+  document.getElementById('bcu').style.borderColor=v?'':'#e53e3e';
 }
 
 function addNum(){addBets('number',document.getElementById('bnin').value,document.getElementById('bnam').value,'bnin','bnam');}
@@ -363,7 +414,7 @@ function addHarup(){addBets('harup',document.getElementById('bhin').value,docume
 
 function addBets(type,inp,defAmt,inId,amId){
   const cust=document.getElementById('bcu').value.trim();
-  if(!cust){toast('Customer naam zaruri hai! Pehle naam likho.','e');document.getElementById('bcu').focus();document.getElementById('bcu').style.borderColor='var(--red)';document.getElementById('bcu-warn').style.display='block';return;}
+  if(!cust){toast('Customer naam zaruri hai!','e');document.getElementById('bcu').focus();document.getElementById('bcu').style.borderColor='#e53e3e';document.getElementById('bcu-warn').style.display='block';return;}
   if(!inp?.trim()){toast(`Enter ${type}(s)`,'e');return;}
   const items=inp.split(',').map(s=>s.trim()).filter(s=>s);
   if(!items.length){toast('Invalid input','e');return;}
@@ -377,12 +428,17 @@ function addBets(type,inp,defAmt,inId,amId){
     if(type==='number'){
       const n=parseInt(pv);if(isNaN(n)||n<0||n>99){toast(`Invalid number: ${pv}`,'e');return;}
       cart.push({type:'number',num:n,harup:null,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*90});added++;
-    }else{
+    } else {
       const h=parseInt(pv);if(isNaN(h)||h<0||h>9){toast(`Invalid harup: ${pv}`,'e');return;}
       cart.push({type:'harup',num:null,harup:h,amount:amt,commission:comm,userAmount:uAmt,customerName:cust,userWin:amt*9});added++;
     }
   });
-  if(added>0){renderCart();toast(`${added} ${type} bet(s) added!`,'s');document.getElementById(inId).value='';document.getElementById(amId).value='';}
+  if(added>0){
+    renderCart();toast(`${added} ${type} bet(s) added!`,'s');
+    // Clear input fields after adding (form auto-clear)
+    document.getElementById(inId).value='';
+    document.getElementById(amId).value='';
+  }
 }
 
 function rmCart(i){cart.splice(i,1);renderCart();}
@@ -395,7 +451,7 @@ function renderCart(){
   cl.innerHTML=cart.map((b,i)=>`<div class="brow" style="flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1">
       <span style="font-size:11px;color:var(--text2)">👤 ${b.customerName}</span>
-      ${b.type==='number'?`<span class="nb2" style="font-size:11px">Num: ${p2(b.num)}</span>`:`<span class="hb2" style="font-size:11px">Harup: ${b.harup}</span>`}
+      ${b.type==='number'?`<span class="nb2" style="font-size:11px">Num: ${p2(b.num)}</span>`:`<span class="hb2" style="font-size:11px">H${b.harup} — ${gHW(b.harup)}</span>`}
       <span style="color:var(--gold);font-weight:700;font-size:12px">${fmtINR(b.amount)}</span>
       <span class="wbdg">Win: ${fmtINR(b.userWin)}</span>
     </div>
@@ -413,34 +469,37 @@ async function submitBets(){
   if(!cust){toast('Customer naam zaruri hai!','e');return;}
   if(!confirm(`Submit ${cart.length} bet(s) to Firebase?`))return;
   const btn=document.getElementById('subbtn');
-  btn.disabled=true;btn.textContent='Submitting to Firebase...';
+  btn.disabled=true;btn.textContent='Submitting...';
   const today=getToday(),time=getTS();
   try{
-    // Write each bet to Firestore bets collection
-    // Admin will see these instantly via their onSnapshot listener
     const writes=cart.map(b=>DB.collection('bets').add({
-      agentId:cAg.id,
-      agentName:cAg.name||'',
-      agentMobile:cAg.mobile||'',
+      agentId:cAg.id, agentName:cAg.name||'', agentMobile:cAg.mobile||'',
       customerName:b.customerName,
       type:b.type,
       number:b.type==='number'?b.num:null,
       harup:b.type==='harup'?b.harup:null,
-      amount:b.amount,
-      commission:b.commission,
-      userAmount:b.userAmount,
-      userWin:b.userWin,
-      date:today,
-      time:time,
+      amount:b.amount, commission:b.commission, userAmount:b.userAmount, userWin:b.userWin,
+      date:today, time:time,
       timestamp:firebase.firestore.FieldValue.serverTimestamp()
     }));
     await Promise.all(writes);
-    console.log('✅ Submitted',writes.length,'bets to Firebase — Admin will see them now!');
-    cart=[];document.getElementById('bcu').value='';renderCart();
+    console.log('✅ Submitted',writes.length,'bets to Firebase!');
+
+    // FORM COMPLETELY CLEAR after successful submission
+    cart=[];
+    document.getElementById('bcu').value='';       // Customer name clear
+    document.getElementById('bnin').value='';       // Number input clear
+    document.getElementById('bnam').value='';       // Number amount clear
+    document.getElementById('bhin').value='';       // Harup input clear
+    document.getElementById('bham').value='';       // Harup amount clear
+    document.getElementById('bcu').style.borderColor='';
+    document.getElementById('bcu-warn').style.display='none';
+    renderCart();
+
     toast(`✅ ${writes.length} bets submitted! Admin ko dikhne lagega.`,'s');
     SP('mybets');
-  }catch(e){console.error('Submit error:',e);toast('Error: '+e.message,'e');}
-  btn.disabled=false;btn.textContent='✅ Submit All Bets to Firebase';
+  }catch(e){console.error(e);toast('Error: '+e.message,'e');}
+  btn.disabled=false;btn.textContent='✅ Submit Bets to Firebase';
 }
 
 // MY BETS FILTER
@@ -455,6 +514,7 @@ function filterBets(){
   document.getElementById('mbcnt').textContent=data.length;
   renderMyBets(data);
 }
+
 function renderMyBets(data){
   const tbl=document.getElementById('mbtbl'),empty=document.getElementById('mbempty');
   if(!data?.length){tbl.style.display='none';empty.style.display='flex';return;}
@@ -462,7 +522,7 @@ function renderMyBets(data){
   document.getElementById('mbbody').innerHTML=data.map(b=>`<tr>
     <td style="font-weight:700;color:var(--gold);font-size:12px">${b.customerName||'Guest'}</td>
     <td><span class="${b.type==='number'?'bdg bdg-gold':'bdg bdg-b'}">${b.type}</span></td>
-    <td>${b.type==='number'?`<span class="nb2" style="font-size:11px">${p2(b.number??0)}</span>`:`<span class="hb2" style="font-size:11px">Harup: ${b.harup}</span>`}</td>
+    <td>${b.type==='number'?`<span class="nb2" style="font-size:11px">${p2(b.number??0)}</span>`:`<span class="hb2" style="font-size:11px">H${b.harup} — ${gHW(b.harup)}</span>`}</td>
     <td style="color:var(--gold);font-weight:600">${fmtINR(b.amount)}</td>
     <td><span class="wbdg">${fmtINR(b.userWin??(b.type==='number'?(b.amount||0)*90:(b.amount||0)*9))}</span></td>
     <td style="font-size:10px;color:#888">${b.date||'--'}<br>${b.time||'--'}</td>
@@ -490,18 +550,18 @@ function loadProfile(){
 function loadCommInfo(){
   if(!cAg)return;
   const el=document.getElementById('comminfo');if(!el)return;
-  const totalComm=myBets.reduce((s,b)=>s+(parseFloat(b.commission)||0),0);
-  const todayComm=myBets.filter(b=>b.date===getToday()).reduce((s,b)=>s+(parseFloat(b.commission)||0),0);
+  const tC=myBets.reduce((s,b)=>s+(parseFloat(b.commission)||0),0);
+  const todayC=myBets.filter(b=>b.date===getToday()).reduce((s,b)=>s+(parseFloat(b.commission)||0),0);
   const settled=allSettlements.reduce((s,st)=>s+(parseFloat(st.amount)||0),0);
-  const pending=Math.max(0,totalComm-settled);
+  const pending=Math.max(0,tC-settled);
   el.innerHTML=`
-    <div class="brow"><span>All-time Commission Earned</span><strong style="color:#68d391">${fmtINR(totalComm)}</strong></div>
-    <div class="brow"><span>Today's Commission</span><strong style="color:#68d391">${fmtINR(todayComm)}</strong></div>
+    <div class="brow"><span>All-time Commission</span><strong style="color:#68d391">${fmtINR(tC)}</strong></div>
+    <div class="brow"><span>Today's Commission</span><strong style="color:#68d391">${fmtINR(todayC)}</strong></div>
     <div class="brow"><span>Settled by Admin</span><strong style="color:#68d391">${fmtINR(settled)}</strong></div>
-    <div class="brow" style="background:rgba(221,107,32,.08);border:1px solid rgba(221,107,32,.25);border-radius:var(--rs)"><span style="font-weight:700">Pending Settlement</span><strong style="color:#f6ad55;font-size:16px">${fmtINR(pending)}</strong></div>
-    ${allSettlements.length?`<hr class="dv"/><div style="font-size:11px;color:var(--text2);margin-bottom:8px">Recent Settlements:</div>`+''+allSettlements.slice(0,3).map(s=>`<div class="brow settle-row settled"><span style="font-size:11px">${s.date} — ${s.notes||''}</span><strong style="color:#68d391">${fmtINR(s.amount)}</strong></div>`).join(''):''}`;
+    <div class="brow" style="background:rgba(221,107,32,.08);border:1px solid rgba(221,107,32,.25);border-radius:var(--rs)"><span style="font-weight:700">Pending Settlement</span><strong style="color:#f6ad55;font-size:16px">${fmtINR(pending)}</strong></div>`;
 }
 
+// CHANGE PASSWORD — saves to FIREBASE, not browser
 async function changePwd(){
   const np=document.getElementById('pnew').value.trim();
   const cp=document.getElementById('pcon').value.trim();
@@ -511,18 +571,22 @@ async function changePwd(){
   if(np.length<4){toast('Min 4 characters','e');return;}
   const btn=document.getElementById('pbtn');btn.disabled=true;btn.textContent='Saving to Firebase...';
   try{
+    // Save directly to Firestore — NOT localStorage, NOT sessionStorage
     await DB.collection('agents').doc(cAg.id).update({password:np});
-    cAg.password=np;ok.style.display='block';
-    document.getElementById('pnew').value='';document.getElementById('pcon').value='';
-    toast('Password Firebase mein save ho gaya!','s');
+    cAg.password=np;
+    ok.style.display='block';
+    document.getElementById('pnew').value='';
+    document.getElementById('pcon').value='';
+    toast('✅ Password Firebase mein save ho gaya!','s');
   }catch(e){toast('Error: '+e.message,'e');}
-  btn.disabled=false;btn.textContent='🔑 Update Password';
+  btn.disabled=false;btn.textContent='🔑 Update Password (Firebase)';
 }
 
+// ANALYSIS
 function runAn(){
   const nums=document.getElementById('anin').value.split('\n').map(l=>parseInt(l.trim())).filter(n=>!isNaN(n)&&n>=0&&n<=99);
   const el=document.getElementById('anout');
-  if(!nums.length){el.innerHTML='<div class="empty-st" style="padding:20px"><div class="ei">🔢</div><div class="et">Enter numbers above</div></div>';return;}
+  if(!nums.length){el.innerHTML='<div class="empty-st" style="padding:20px"><div class="ei">🔢</div><div class="et">Enter numbers</div></div>';return;}
   const total=nums.reduce((a,b)=>a+b,0),avg=(total/nums.length).toFixed(2);
   const df={};nums.forEach(n=>{const d=n%10;df[d]=(df[d]||0)+1;});
   const top=Object.entries(df).sort((a,b)=>b[1]-a[1])[0][0];

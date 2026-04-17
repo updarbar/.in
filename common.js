@@ -1,9 +1,7 @@
-// ============================================
-// UP DARBAR — SHARED COMMON.JS v4
-// Include this AFTER Firebase SDK scripts
-// ============================================
 
-// Firebase Config
+// ============================================
+// UP DARBAR — SHARED COMMON.JS v5
+// ============================================
 const _FC = {
   apiKey: "AIzaSyBklYTB9FOP13g-jKSUR7OSaRT4RLazw_Y",
   authDomain: "satta-28662.firebaseapp.com",
@@ -12,15 +10,10 @@ const _FC = {
   messagingSenderId: "930874157007",
   appId: "1:930874157007:web:f48410bce16c0f522e54ba"
 };
-
 if (!firebase.apps.length) firebase.initializeApp(_FC);
 const DB = firebase.firestore();
+DB.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
-// Enable offline persistence so data is NOT lost on refresh
-DB.enablePersistence({ synchronizeTabs: true })
-  .catch(e => { if (e.code !== 'failed-precondition' && e.code !== 'unimplemented') console.warn('Persistence:', e); });
-
-// Number Words
 const NW = {
   0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau',
   10:'Das',11:'Gyarah',12:'Barah',13:'Terah',14:'Chaudah',15:'Pandrah',16:'Solah',17:'Satrah',
@@ -37,87 +30,80 @@ const NW = {
   87:'Satasi',88:'Athasi',89:'Nabbay',90:'Nabbe',91:'Ikyanabbe',92:'Banabbe',93:'Tiranabbe',
   94:'Chaunabbe',95:'Pachanabbe',96:'Chhiyanabbe',97:'Satanabbe',98:'Athanabbe',99:'Ninyanabbe'
 };
-function gW(n) { return NW[parseInt(n)] || String(n); }
+const HW = { 0:'Zero',1:'Ek',2:'Do',3:'Teen',4:'Char',5:'Paanch',6:'Chhe',7:'Saat',8:'Aath',9:'Nau' };
 
-// IST Time
-function getNow() { return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })); }
-function getToday() { const d = getNow(); return `${p2(d.getDate())}-${p2(d.getMonth()+1)}-${d.getFullYear()}`; }
-function getTS() { return getNow().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }); }
-function p2(n) { return String(n).padStart(2, '0'); }
-function fmtINR(n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); }
+function gW(n) { return NW[parseInt(n)] || String(n); }
+function gHW(h) { return (HW[parseInt(h)] || String(h)) + ' Harup'; }
+
+function getNow() { return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"})); }
+function getToday() { const d=getNow(); return `${p2(d.getDate())}-${p2(d.getMonth()+1)}-${d.getFullYear()}`; }
+function getTS() { return getNow().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); }
+function p2(n) { return String(n).padStart(2,'0'); }
+function fmtINR(n) { return '₹'+Number(n||0).toLocaleString('en-IN'); }
 
 function parseT(ts) {
-  const b = getNow();
-  if (!ts) { b.setHours(18,0,0,0); return b; }
+  const b=getNow(); if(!ts){b.setHours(18,0,0,0);return b;}
   try {
-    const t = ts.toUpperCase().trim(); let h=18,m=0;
-    if (t.includes('PM')||t.includes('AM')) {
-      const [tp,mod] = t.split(' '); const [hh,mm] = tp.split(':');
-      h=parseInt(hh); m=parseInt(mm||0);
-      if(mod==='PM'&&h<12) h+=12; if(mod==='AM'&&h===12) h=0;
-    } else { const [hh,mm]=t.split(':'); h=parseInt(hh); m=parseInt(mm||0); }
+    const t=ts.toUpperCase().trim(); let h=18,m=0;
+    if(t.includes('PM')||t.includes('AM')){
+      const[tp,mod]=t.split(' ');const[hh,mm]=tp.split(':');
+      h=parseInt(hh);m=parseInt(mm||0);
+      if(mod==='PM'&&h<12)h+=12;if(mod==='AM'&&h===12)h=0;
+    } else {const[hh,mm]=t.split(':');h=parseInt(hh);m=parseInt(mm||0);}
     b.setHours(h,m,0,0);
-  } catch(e) { b.setHours(18,0,0,0); }
+  } catch(e){b.setHours(18,0,0,0);}
   return b;
 }
+
 function fmtT(ts) {
-  if (!ts) return '6:00 PM';
-  const u = ts.toUpperCase();
-  if (u.includes('AM')||u.includes('PM')) return ts;
-  const [h,m] = ts.split(':'); let hr=parseInt(h);
-  const ap = hr>=12?'PM':'AM'; hr=hr%12||12;
-  return `${hr}:${m} ${ap}`;
+  if(!ts)return'6:00 PM';const u=ts.toUpperCase();
+  if(u.includes('AM')||u.includes('PM'))return ts;
+  const[h,m]=ts.split(':');let hr=parseInt(h);
+  const ap=hr>=12?'PM':'AM';hr=hr%12||12;return`${hr}:${m} ${ap}`;
 }
 
-// Sort bets newest first without Firestore orderBy (avoids index requirement)
 function sortBets(arr) {
   return arr.sort((a,b) => {
-    const ta = a.timestamp?.toMillis?.() || (a.timestamp?.seconds ? a.timestamp.seconds*1000 : 0);
-    const tb = b.timestamp?.toMillis?.() || (b.timestamp?.seconds ? b.timestamp.seconds*1000 : 0);
+    const ta = a.timestamp?.toMillis?.() || (a.timestamp?.seconds?a.timestamp.seconds*1000:0);
+    const tb = b.timestamp?.toMillis?.() || (b.timestamp?.seconds?b.timestamp.seconds*1000:0);
     return tb - ta;
   });
 }
 
-// Toast
 function toast(msg, t='i') {
-  let w = document.getElementById('twrap');
-  if (!w) { w=document.createElement('div'); w.id='twrap'; w.className='twrap'; document.body.appendChild(w); }
-  const el = document.createElement('div');
-  el.className = `toast t${t}`; el.textContent = msg; w.appendChild(el);
-  setTimeout(() => el.remove(), 3800);
+  let w=document.getElementById('twrap');
+  if(!w){w=document.createElement('div');w.id='twrap';w.className='twrap';document.body.appendChild(w);}
+  const el=document.createElement('div');el.className=`toast t${t}`;el.textContent=msg;w.appendChild(el);
+  setTimeout(()=>el.remove(),3800);
 }
 
-// Modal
-function openM(id) { const e=document.getElementById(id); if(e) e.style.display='flex'; }
-function closeM(id) { const e=document.getElementById(id); if(e) e.style.display='none'; }
-function toggleSidebar() { const s=document.getElementById('sidebar'); if(s) s.classList.toggle('open'); }
-function genPwd() { const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#'; return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join(''); }
+function openM(id){const e=document.getElementById(id);if(e)e.style.display='flex';}
+function closeM(id){const e=document.getElementById(id);if(e)e.style.display='none';}
+function toggleSidebar(){const s=document.getElementById('sidebar');if(s)s.classList.toggle('open');}
+function genPwd(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#';return Array.from({length:8},()=>c[Math.floor(Math.random()*c.length)]).join('');}
 
-// CSV Export
-function exportCSV(data, fn) {
-  if (!data?.length) { toast('No data','e'); return; }
-  const h = Object.keys(data[0]);
-  const csv = [h.join(','), ...data.map(r=>h.map(k=>`"${(r[k]??'').toString().replace(/"/g,"'")}"`).join(','))].join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = fn + '_' + getToday() + '.csv'; a.click();
-  toast('Exported!','s');
+function exportCSV(data,fn){
+  if(!data?.length){toast('No data','e');return;}
+  const h=Object.keys(data[0]);
+  const csv=[h.join(','),...data.map(r=>h.map(k=>`"${(r[k]??'').toString().replace(/"/g,"'")}"`).join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=fn+'_'+getToday()+'.csv';a.click();toast('Exported!','s');
 }
 
-// PWA
-let _dp = null;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); _dp = e;
-  document.querySelectorAll('.install-banner').forEach(b => b.classList.add('show'));
+let _dp=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();_dp=e;
+  document.querySelectorAll('.install-banner').forEach(b=>b.classList.add('show'));
 });
-window.addEventListener('appinstalled', () => {
-  _dp = null;
-  document.querySelectorAll('.install-banner').forEach(b => b.classList.remove('show'));
+window.addEventListener('appinstalled',()=>{
+  _dp=null;
+  document.querySelectorAll('.install-banner').forEach(b=>b.classList.remove('show'));
 });
-function installPWA() {
-  if (_dp) { _dp.prompt(); _dp.userChoice.then(() => { _dp=null; document.querySelectorAll('.install-banner').forEach(b=>b.classList.remove('show')); }); }
-  else alert('📲 App Install:\n\n📱 Android Chrome: Menu(⋮) → "Add to Home Screen"\n🍎 iOS Safari: Share(□↑) → "Add to Home Screen"\n💻 Desktop Chrome: Address bar install icon (⊕)');
+function installPWA(){
+  if(_dp){_dp.prompt();_dp.userChoice.then(()=>{_dp=null;document.querySelectorAll('.install-banner').forEach(b=>b.classList.remove('show'));});}
+  else alert('📲 App Install:\n\n📱 Android Chrome:\nMenu (⋮) → "Add to Home Screen"\n\n🍎 iOS Safari:\nShare (□↑) → "Add to Home Screen"\n\n💻 Desktop Chrome:\nAddress bar mein ⊕ icon');
 }
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 
-console.log('✅ UP Darbar common.js v4 loaded | DB:', !!DB);
+console.log('✅ common.js v5 | DB:', !!DB);
